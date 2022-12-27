@@ -1,6 +1,6 @@
 from pygame import *
 
-width,height= 800,600
+width,height= 1024,768
 screen=display.set_mode((width,height))
 RED=(255,0,0)
 GREY=(127,127,127)
@@ -12,7 +12,7 @@ WHITE = (255, 255, 255)
 menuRects = [Rect(500, 100*i+100, 200, 60) for i in range(4)] # Rectangular buttons in the menu
 myClock = time.Clock()
 running=True
-# bg = Rect(0,0,800,500)
+bg = Rect(0,0,800,500)
 platformRect = Rect(0,500,800,100)
 draw.rect(screen,BLACK,platformRect)
 pos = [55,325]
@@ -74,7 +74,7 @@ while running:
             
 
 
-    # screen.set_clip(bg)
+    screen.set_clip(bg)
     
     if pos[0] < 0: # Portal thingy v1
         pos[0] = 800
