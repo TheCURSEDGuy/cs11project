@@ -1,6 +1,6 @@
 from pygame import *
 
-width,height= 1024,768
+width,height= 1280,720
 screen=display.set_mode((width,height))
 RED=(255,0,0)
 GREY=(127,127,127)
