@@ -21,8 +21,7 @@ TXTPos = [(i[0]+20,i[1]+20) for i in menuRects]
 
 running=True
 bg = Rect(0,0,1280,720)
-platformRect = Rect(0,500,1280,100)
-draw.rect(screen,BLACK,platformRect)
+platRects = [Rect(0,500,1280,100),Rect(100,300,200,100)]
 pos = [55,325]
 pRect = Rect(pos[0],pos[1],10,50)
 g = 9.80665
@@ -35,9 +34,6 @@ upair = False
 
 def menu(mx,my):
     
-    # if menuRects.collidepoin(mx,my):
-    #     return
-    
     
     screen.fill((147,112,219))
     screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"),(800,720)),(0,0))
@@ -48,9 +44,24 @@ def menu(mx,my):
     
     return
 
-def collide():
+def collide(vy,t,pos):
+    global upair
+    if not pRect.collidelistall(platRects):
+        
+        vy = gravity(vy)
+        t+=0.01
     
-    return
+    print()
+    for i in platRects:
+        if pRect.colliderect((i[0],i[1],i[2],1)):
+
+            if vy > 0:
+                pos[1] = i[1]-50
+                vy = 0
+                t = 0
+                upair = False
+
+    return vy,t,pos
 
 def friction(vx):
     if vx > 0:
@@ -67,6 +78,7 @@ def move(vx,vy):
     if evt.key == K_UP and not upair:
         vy -= 4
         upair = True
+        
     if evt.key == K_RIGHT:
         if vx < 5:
             vx+=0.1
@@ -87,6 +99,8 @@ def gravity(vy):
     return vy
 
 def play(vx,vy,pos,t):
+    global upair
+    global pRect
     vy = gravity(vy)
     if evt.type == KEYDOWN:
         vx,vy = move(vx,vy)
@@ -103,24 +117,15 @@ def play(vx,vy,pos,t):
     
             
     screen.fill(WHITE)
-
+    [draw.rect(screen,BLACK,i) for i in platRects]
     pos[1] += vy
     pos[0] += vx
 
-    draw.rect(screen,BLACK,platformRect)
+    draw.rect(screen,BLACK,platRects[0])
     draw.rect(screen,RED,(pos[0],pos[1],10,50))
     pRect = Rect(pos[0],pos[1],10,50)
     
-    if not pRect.colliderect(platformRect):
-        vy = gravity(vy)
-        t+=0.01
-       
-
-    if pRect.colliderect(platformRect):
-        pos[1] = 450
-        vy = 0
-        t = 0
-        upair = False
+    vy,t,pos = collide(vy,t,pos)
 
     return vx,vy,pos,t
 
@@ -128,6 +133,11 @@ while running:
     for evt in event.get():
         if evt.type==QUIT:
             running=False
+
+        if evt.type == MOUSEBUTTONDOWN:
+            if status == "menu":
+                if menuRects[0].collidepoint(mx,my):
+                    status = "play"
 
     mx,my = mouse.get_pos()
 
