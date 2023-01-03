@@ -1,5 +1,9 @@
 from pygame import *
 
+font.init()
+myClock = time.Clock()
+comicFont=font.SysFont("Comic Sans MS",25)
+
 width,height= 1280,720
 screen=display.set_mode((width,height))
 RED=(255,0,0)
@@ -9,8 +13,10 @@ BLUE=(0,0,255)
 GREEN=(0,255,0)
 YELLOW=(255,255,0)
 WHITE = (255, 255, 255)
-menuRects = [Rect(825, 130*i+200, 350, 80) for i in range(4)] # Rectangular buttons in the menu
-myClock = time.Clock()
+
+menuRects = [Rect(800+(1280-800)/2-350/2, 130*i+200, 350, 80) for i in range(4)] # Rectangular buttons in the menu
+menuTXT = ["PLAY","LEVELS","SOMETHING","SOMETHING"]
+TXTPos = [(i[0]+20,i[1]+20) for i in menuRects]
 
 
 running=True
@@ -29,10 +35,17 @@ upair = False
 
 def menu(mx,my):
     
-    if menuRects.collidelist(mx,my):
-        return
-    screen.fill(WHITE)
-    [draw.rect(screen,BLACK,i) for i in menuRects]
+    # if menuRects.collidepoin(mx,my):
+    #     return
+    
+    
+    screen.fill((147,112,219))
+    screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"),(800,720)),(0,0))
+    
+    [draw.rect(screen,WHITE,i) for i in menuRects]
+    [draw.rect(screen,BLACK,i,5) for i in menuRects]
+    [screen.blit(comicFont.render(i,False,GREEN),(j)) for i,j in zip(menuTXT,TXTPos)]
+    
     return
 
 def collide():
