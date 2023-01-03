@@ -9,11 +9,13 @@ BLUE=(0,0,255)
 GREEN=(0,255,0)
 YELLOW=(255,255,0)
 WHITE = (255, 255, 255)
-menuRects = [Rect(500, 100*i+100, 200, 60) for i in range(4)] # Rectangular buttons in the menu
+menuRects = [Rect(825, 130*i+200, 350, 80) for i in range(4)] # Rectangular buttons in the menu
 myClock = time.Clock()
+
+
 running=True
-bg = Rect(0,0,800,500)
-platformRect = Rect(0,500,800,100)
+bg = Rect(0,0,1280,720)
+platformRect = Rect(0,500,1280,100)
 draw.rect(screen,BLACK,platformRect)
 pos = [55,325]
 pRect = Rect(pos[0],pos[1],10,50)
@@ -21,10 +23,14 @@ g = 9.80665
 vx = 0
 vy = 0
 t = 0
+status = "menu"
 
 upair = False
 
-def menu():
+def menu(mx,my):
+    
+    if menuRects.collidelist(mx,my):
+        return
     screen.fill(WHITE)
     [draw.rect(screen,BLACK,i) for i in menuRects]
     return
@@ -43,39 +49,39 @@ def friction(vx):
     
     return vx
 
+def move(vx,vy):
+    global upair
+    if evt.key == K_UP and not upair:
+        vy -= 4
+        upair = True
+    if evt.key == K_RIGHT:
+        if vx < 5:
+            vx+=0.1
+        else:
+            vx = 5
+    if evt.key == K_LEFT:
+        if vx > -5:
+            vx-=0.1
+        else:
+            vx = -5
+
+    return vx,vy
+
 def gravity(vy):
+    
     global t
     vy += 1/2*(g)*(t)**2
     return vy
 
-while running:
-    for evt in event.get():
-        if evt.type==QUIT:
-            running=False
-
+def play(vx,vy,pos,t):
+    vy = gravity(vy)
     if evt.type == KEYDOWN:
-        if evt.key == K_UP and not upair:
-            vy -= 4
-            upair = True
-        if evt.key == K_RIGHT:
-            if vx < 5:
-                vx+=0.1
-            else:
-                vx = 5
-        if evt.key == K_LEFT:
-            if vx > -5:
-                vx-=0.1
-            else:
-                vx = -5
+        vx,vy = move(vx,vy)
     
     if evt.type == KEYUP:
         if evt.key == K_RIGHT or evt.key == K_LEFT:
             vx = friction(vx)
             
-
-
-    screen.set_clip(bg)
-    
     if pos[0] < 0: # Portal thingy v1
         pos[0] = 800
 
@@ -83,7 +89,7 @@ while running:
         pos[0] = 0
     
             
-    screen.fill((255,255,255))
+    screen.fill(WHITE)
 
     pos[1] += vy
     pos[0] += vx
@@ -103,9 +109,23 @@ while running:
         t = 0
         upair = False
 
-    myClock.tick(60)
+    return vx,vy,pos,t
 
-    menu()
+while running:
+    for evt in event.get():
+        if evt.type==QUIT:
+            running=False
+
+    mx,my = mouse.get_pos()
+
+    if status == "menu":
+        menu(mx,my)
+
+    if status == "play":
+        vx,vy,pos,t = play(vx,vy,pos,t)
+
+
+    myClock.tick(60)
     
     display.flip()
             
