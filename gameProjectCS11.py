@@ -21,7 +21,7 @@ TXTPos = [(i[0]+20,i[1]+20) for i in menuRects]
 
 running=True
 bg = Rect(0,0,1280,720)
-platRects = [Rect(0,500,1280,100),Rect(100,300,200,100)]
+platRects = [Rect(0,500,1280,100),Rect(100,400,200,50)]
 pos = [55,325]
 pRect = Rect(pos[0],pos[1],10,50)
 g = 9.80665
@@ -29,6 +29,7 @@ vx = 0
 vy = 0
 t = 0
 status = "menu"
+touched = False
 
 upair = False
 
@@ -45,13 +46,8 @@ def menu(mx,my):
     return
 
 def collide(vy,t,pos):
+    global touched
     global upair
-    if not pRect.collidelistall(platRects):
-        
-        vy = gravity(vy)
-        t+=0.01
-    
-    print()
     for i in platRects:
         if pRect.colliderect((i[0],i[1],i[2],1)):
 
@@ -60,6 +56,19 @@ def collide(vy,t,pos):
                 vy = 0
                 t = 0
                 upair = False
+                touched = True
+
+
+    if not pRect.collidelistall(platRects):
+        if not touched:
+            vy = gravity(vy)
+            t+=0.01
+            touched = False
+
+    
+    
+    print(touched)
+    
 
     return vy,t,pos
 
@@ -74,10 +83,12 @@ def friction(vx):
     return vx
 
 def move(vx,vy):
+    global touched
     global upair
     if evt.key == K_UP and not upair:
         vy -= 4
         upair = True
+        touched = False
         
     if evt.key == K_RIGHT:
         if vx < 5:
@@ -89,7 +100,8 @@ def move(vx,vy):
             vx-=0.1
         else:
             vx = -5
-
+    if not pRect.collidelistall(platRects):
+        touched = False
     return vx,vy
 
 def gravity(vy):
