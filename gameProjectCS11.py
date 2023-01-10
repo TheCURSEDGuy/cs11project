@@ -15,8 +15,9 @@ YELLOW=(255,255,0)
 WHITE = (255, 255, 255)
 
 menuRects = [Rect(800+(1280-800)/2-350/2, 130*i+200, 350, 80) for i in range(4)] # Rectangular buttons in the menu
-menuTXT = ["PLAY","LEVELS","SOMETHING","SOMETHING"]
+menuTXT = ["PLAY","LEVELS","SOMETHING","QUIT"]
 TXTPos = [(i[0]+20,i[1]+20) for i in menuRects]
+stage = 0
 
 
 running=True
@@ -33,15 +34,14 @@ touched = False
 
 upair = False
 
-def menu(mx,my):
-    
+def menu():
     
     screen.fill((147,112,219))
     screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"),(800,720)),(0,0))
     
     [draw.rect(screen,WHITE,i) for i in menuRects]
     [draw.rect(screen,BLACK,i,5) for i in menuRects]
-    [screen.blit(comicFont.render(i,False,GREEN),(j)) for i,j in zip(menuTXT,TXTPos)]
+    [screen.blit(comicFont.render(i,False,BLACK),(j)) for i,j in zip(menuTXT,TXTPos)]
     
     return
 
@@ -62,22 +62,22 @@ def collide(vy,t,pos):
     if not pRect.collidelistall(platRects):
         if not touched:
             vy = gravity(vy)
-            t+=0.01
+            t+=0.009
             touched = False
 
     
     
-    print(touched)
+    # print(touched)
     
 
     return vy,t,pos
 
 def friction(vx):
     if vx > 0:
-        vx -= 0.2
+        vx -= 0.3
     if vx < 0:
-        vx += 0.2
-    if -0.2 < vx < 0.2:
+        vx += 0.3
+    if -0.3 < vx < 0.3:
         vx = 0
     
     return vx
@@ -127,7 +127,7 @@ def play(vx,vy,pos,t):
     if pos[0] > 800: # Portal thingy v2
         pos[0] = 0
     
-            
+      
     screen.fill(WHITE)
     [draw.rect(screen,BLACK,i) for i in platRects]
     pos[1] += vy
@@ -150,11 +150,13 @@ while running:
             if status == "menu":
                 if menuRects[0].collidepoint(mx,my):
                     status = "play"
+                if menuRects[3].collidepoint(mx,my):
+                    running = False
 
     mx,my = mouse.get_pos()
 
     if status == "menu":
-        menu(mx,my)
+        menu()
 
     if status == "play":
         vx,vy,pos,t = play(vx,vy,pos,t)
