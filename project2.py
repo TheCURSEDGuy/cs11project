@@ -6,6 +6,7 @@ comicFont = font.SysFont("Comic Sans MS", 25)
 
 width, height = 1280, 720
 screen = display.set_mode((width, height))
+
 RED = (255, 0, 0)
 GREY = (127, 127, 127)
 BLACK = (0, 0, 0)
@@ -24,7 +25,7 @@ textPos = [(i[0]+20, i[1]+20) for i in menuRects]
 stage = 0
 
 def menu():
-    screen.fill((147,112,219))
+    screen.fill((147, 112, 219))
     screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"), (800, 720)), (0, 0))
     [draw.rect(screen, WHITE, i) for i in menuRects]
     [draw.rect(screen, BLACK, i, 5) for i in menuRects]
@@ -32,18 +33,19 @@ def menu():
 
     display.flip()
 
+# instructions 
+
 def instructions():
     print("placeholder")
 
 # gameplay
-
 stage = 1
 
-                # left top width height
-playerRect = Rect(55, 325, 10, 50) # player
+ # left top width height
+playerRect = Rect(55, 325, 10, 50) # Player
 
-plats = [Rect(100, 400, 200, 50)] # platforms
-platsMain = [Rect(0, 500, 1280, 100)] # platforms that don't allow you to "jump down" from
+platforms = [Rect(100, 400, 200, 50)]
+platformsMain = [Rect(0, 500, 1280, 100)] # Platforms that don't allow you to "jump down".
 
 X = 0
 Y = 1
@@ -67,14 +69,14 @@ def stages():
 def drawScene():
     screen.fill(WHITE)
     drawPlayer()
-    [draw.rect(screen, BLACK, i) for i in plats]
+    [draw.rect(screen, BLACK, i) for i in platforms]
     display.flip()
 
 def drawPlayer():
     draw.rect(screen, RED, playerRect)  
 
 def movePlayer(playerRect):
-    if keys[K_UP] and playerRect[Y] + playerRect[H]== v[BOTTOM] and v[Y] == 0:
+    if keys[K_UP] and playerRect[Y] + playerRect[H] == v[BOTTOM] and v[Y] == 0:
         v[Y] = jump
     
     v[X] = 0
@@ -89,19 +91,23 @@ def movePlayer(playerRect):
 
     playerRect[X] += v[X]
     
-def collision(playerRect, plats):
-    for i in plats:
-        if playerRect[X]+ playerRect[W] > i[X] and playerRect[X] < i[X] + i[W] and playerRect[Y]+ playerRect[H] <= i[Y] and playerRect[Y] + playerRect[H]+ v[Y] >=i[Y] and not keys[K_DOWN]:
-            v[BOTTOM]= i[Y]
+def collision(playerRect, platforms):
+    for i in platforms:
+        if (playerRect[X] + playerRect[W] > i[X] and
+            playerRect[X] < i[X] + i[W] and
+            playerRect[Y] + playerRect[H] <= i[Y] and
+            playerRect[Y] + playerRect[H] + v[Y] >= i[Y] and not
+            keys[K_DOWN]):
+            v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y]=v[2]-playerRect[H]
+            playerRect[Y] = v[2]-playerRect[H]
 
     playerRect [Y] += v[Y]
     
     if playerRect[Y] + playerRect[H] >= GROUND:
         v[2] = GROUND
         v[Y] = 0
-        playerRect[Y] = GROUND - playerRect[H]
+        playerRect[Y] = GROUND-playerRect[H]
 
 while running:
     for evt in event.get():
@@ -114,14 +120,13 @@ while running:
 
     if status == "menu":
         menu()
-    if status == "levels":
+    elif status == "levels":
         instructions()
     elif status == "play":
         movePlayer(playerRect)
-        collision(playerRect, plats)
+        collision(playerRect, platforms)
         drawScene()
         stages()
-        
         myClock.tick(60) 
 
     if mb[0]:
