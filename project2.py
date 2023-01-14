@@ -19,18 +19,21 @@ status = "menu"
 
 # menu
 menuRects = [Rect(865, 130*i+200, 350, 80) for i in range(4)] # Rectangular buttons in the menu
-menuText = ["PLAY", "LEVELS", "SOMETHING", "QUIT"]
+menuText = ["PLAY", "INSTRUCTIONS", "SOMETHING", "QUIT"]
 textPos = [(i[0]+20, i[1]+20) for i in menuRects]
 stage = 0
 
 def menu():
     screen.fill((147,112,219))
-    screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"),(800,720)),(0,0))
-    [draw.rect(screen,WHITE,i) for i in menuRects]
-    [draw.rect(screen,BLACK,i,5) for i in menuRects]
-    [screen.blit(comicFont.render(i, True, BLACK),(j)) for i,j in zip(menuText,textPos)]
+    screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"), (800, 720)), (0, 0))
+    [draw.rect(screen, WHITE, i) for i in menuRects]
+    [draw.rect(screen, BLACK, i, 5) for i in menuRects]
+    [screen.blit(comicFont.render(i, True, BLACK),(j)) for i,j in zip(menuText, textPos)]
 
     display.flip()
+
+def instructions():
+    print("placeholder")
 
 # gameplay
 
@@ -48,12 +51,12 @@ W = 2
 H = 3
 
 GROUND = height
-BOTTOM = 2
 
 gravity = 2
 walkSpeed = 5
 jump = -35
 
+BOTTOM = 2
 v = [0, 0, GROUND]
 
 def stages():
@@ -111,6 +114,8 @@ while running:
 
     if status == "menu":
         menu()
+    if status == "levels":
+        instructions()
     elif status == "play":
         movePlayer(playerRect)
         collision(playerRect, plats)
@@ -122,5 +127,7 @@ while running:
     if mb[0]:
         if menuRects[0].collidepoint(mx, my):
             status = "play"
+        if menuRects[1].collidepoint(mx, my):
+            status = "levels"
             
 quit()
