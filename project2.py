@@ -107,7 +107,6 @@ while running:
             running = False
     
     keys = key.get_pressed()
-
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
 
@@ -118,6 +117,7 @@ while running:
         collision(playerRect, plats)
         drawScene()
         stages()
+        
         myClock.tick(60) 
 
     if mb[0]:
