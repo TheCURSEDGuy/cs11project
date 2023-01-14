@@ -100,7 +100,6 @@ def collision(playerRect, plats):
         v[Y] = 0
         playerRect[Y] = GROUND - playerRect[H]
 
-
 while running:
     for evt in event.get():
         if evt.type == QUIT:
