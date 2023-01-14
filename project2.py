@@ -44,8 +44,8 @@ stage = 1
  # left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
 
-platforms = [Rect(100, 400, 200, 50)]
-platformsMain = [Rect(0, 500, 1280, 100)] # Platforms that don't allow you to "jump down".
+platforms = [0, [Rect(100, 400, 200, 50)], [Rect(100, 200, 400, 20)]]
+platformsMain = [0, [Rect(0, 500, 1280, 100)], [Rect(0, 600, 1280, 100)]] # Platforms that don't allow you to "jump down".
 
 X = 0
 Y = 1
@@ -61,26 +61,37 @@ jump = -35
 BOTTOM = 2
 v = [0, 0, GROUND]
 
-def stages():
-    if playerRect[0] > width:
-        print("e")
+def stages(playerRect):
+    global stage
 
+    if playerRect[0] == width:
+        playerRect[X] = 0
+        print(platformsMain[stage][0].y)
+        playerRect[Y] = platformsMain[stage][0].y
+        stage += 1
+    
+    if playerRect[0] < 0 and stage != 1:
+        playerRect[X] = width - playerRect[W]
+        playerRect[Y] = 450
+        stage -= 1
 
 def drawScene():
     screen.fill(WHITE)
     drawPlayer()
-    [draw.rect(screen, BLACK, i) for i in platforms]
+
+    [draw.rect(screen, BLACK, i) for i in platforms[stage]]
+    [draw.rect(screen, BLACK, i) for i in platformsMain[stage]]
     display.flip()
 
 def drawPlayer():
     draw.rect(screen, RED, playerRect)  
 
 def movePlayer(playerRect):
+    v[X] = 0
+
     if keys[K_UP] and playerRect[Y] + playerRect[H] == v[BOTTOM] and v[Y] == 0:
         v[Y] = jump
     
-    v[X] = 0
-
     if keys[K_RIGHT]:
         v[X] = walkSpeed
 
@@ -92,12 +103,21 @@ def movePlayer(playerRect):
     playerRect[X] += v[X]
     
 def collision(playerRect, platforms):
-    for i in platforms:
-        if (playerRect[X] + playerRect[W] > i[X] and
+    for i in platforms[stage]: # Platforms that can be jumped down from.
+        if (playerRect[X] + playerRect[W] > i[X] and 
             playerRect[X] < i[X] + i[W] and
             playerRect[Y] + playerRect[H] <= i[Y] and
             playerRect[Y] + playerRect[H] + v[Y] >= i[Y] and not
             keys[K_DOWN]):
+            v[BOTTOM] = i[Y]
+            v[Y] = 0
+            playerRect[Y] = v[2]-playerRect[H]
+
+    for i in platformsMain[stage]: # Platforms that cannot be jumped down from.
+        if (playerRect[X] + playerRect[W] > i[X] and
+            playerRect[X] < i[X] + i[W] and
+            playerRect[Y] + playerRect[H] <= i[Y] and
+            playerRect[Y] + playerRect[H] + v[Y] >= i[Y]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
             playerRect[Y] = v[2]-playerRect[H]
@@ -123,10 +143,10 @@ while running:
     elif status == "levels":
         instructions()
     elif status == "play":
+        stages(playerRect)
         movePlayer(playerRect)
         collision(playerRect, platforms)
         drawScene()
-        stages()
         myClock.tick(60) 
 
     if mb[0]:
