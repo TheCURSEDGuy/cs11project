@@ -46,6 +46,7 @@ playerRect = Rect(55, 325, 10, 50) # Player
 
 platforms = [0, [Rect(100, 400, 200, 50)], [Rect(100, 200, 400, 20)]]
 platformsMain = [0, [Rect(0, 500, 1280, 100)], [Rect(0, 600, 1280, 100)]] # Platforms that don't allow you to "jump down".
+walls = [0, [Rect(width/2, 400, 50, 300)], []]
 
 X = 0
 Y = 1
@@ -66,14 +67,15 @@ def stages(playerRect):
 
     if playerRect[0] == width:
         playerRect[X] = 0
-        print(platformsMain[stage][0].y)
-        playerRect[Y] = platformsMain[stage][0].y
         stage += 1
+        playerRect[Y] = platformsMain[stage][0].y - playerRect.height
     
     if playerRect[0] < 0 and stage != 1:
         playerRect[X] = width - playerRect[W]
-        playerRect[Y] = 450
         stage -= 1
+        playerRect[Y] = platformsMain[stage][0].y - playerRect.height
+        print(playerRect)
+        print(platformsMain[stage][0].y)
 
 def drawScene():
     screen.fill(WHITE)
@@ -81,6 +83,7 @@ def drawScene():
 
     [draw.rect(screen, BLACK, i) for i in platforms[stage]]
     [draw.rect(screen, BLACK, i) for i in platformsMain[stage]]
+    [draw.rect(screen, BLACK, i) for i in walls[stage]]
     display.flip()
 
 def drawPlayer():
@@ -92,11 +95,19 @@ def movePlayer(playerRect):
     if keys[K_UP] and playerRect[Y] + playerRect[H] == v[BOTTOM] and v[Y] == 0:
         v[Y] = jump
     
-    if keys[K_RIGHT]:
+    if keys[K_RIGHT] and wallCollision(playerRect[X] + playerRect.width/2, playerRect[Y], walls) == -1:
         v[X] = walkSpeed
 
-    if keys[K_LEFT]:
+    if keys[K_LEFT] and wallCollision(playerRect[X] - playerRect.width/2, playerRect[Y], walls) == -1:
         v[X] = -walkSpeed
+
+    '''if keys[K_DOWN] and hitWalls(player[X],player[Y]+5,walls)==-1: #if player moves down and doesn't hit the wall                                             #then he can continue walking     
+        player[Y] += 5                                          #otherwise he stops moving
+    elif keys[K_UP] and hitWalls(player[X],player[Y]-5,walls)==-1:                                                             
+        player[Y] -= 5
+    if keys[K_LEFT] and hitWalls(player[X]-5,player[Y],walls)==-1:                                                            
+        player[X] -= 5
+    elif keys[K_RIGHT] and hitWalls(player[X]+5,player[Y],walls)==-1:  '''
     
     v[Y] += gravity 
 
@@ -121,6 +132,16 @@ def collision(playerRect, platforms):
             v[BOTTOM] = i[Y]
             v[Y] = 0
             playerRect[Y] = v[2]-playerRect[H]
+    
+    for i in walls[stage]:
+        if (playerRect[X] + playerRect[W] > i[X] and 
+            playerRect[X] < i[X] + i[W] and
+            playerRect[Y] + playerRect[H] <= i[Y] and
+            playerRect[Y] + playerRect[H] + v[Y] >= i[Y] and not
+            keys[K_DOWN]):
+            v[BOTTOM] = i[Y]
+            v[Y] = 0
+            playerRect[Y] = v[2]-playerRect[H]
 
     playerRect [Y] += v[Y]
     
@@ -128,6 +149,10 @@ def collision(playerRect, platforms):
         v[2] = GROUND
         v[Y] = 0
         playerRect[Y] = GROUND-playerRect[H]
+
+def wallCollision(playerX, playerY, walls):
+    playerRect = Rect(playerX, playerY, 10, 50)
+    return playerRect.collidelist(walls[stage]) 
 
 while running:
     for evt in event.get():
