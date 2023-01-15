@@ -28,7 +28,7 @@ menuRects = [Rect(865, 130*i+200, 350, 80) for i in range(4)] # Buttons in the m
 menuText = ["PLAY", "INSTRUCTIONS", "SOMETHING", "QUIT"]
 textPos = [(i[0]+20, i[1]+20) for i in menuRects]
 
-instRects = [Rect(300*i+240, 190*i+70, 200, 200) for i in range(3)]
+levelRects = [Rect(300*i+240, 190*i+70, 200, 200) for i in range(3)]
 stage = 0
 
 def menu():
@@ -43,7 +43,7 @@ def menu():
 def levels():
     # global status # TEMPORARY
     screen.fill((MIDTUYU))
-    [draw.rect(screen, DARKTUYU, i) for i in instRects]
+    [draw.rect(screen, DARKTUYU, i) for i in levelRects]
     screen.blit(transform.smoothscale(image.load("images/tuyuknife.jpg"), (200, 200)), (220, 50))
     for i in range(1, 4):
         screen.blit(transform.smoothscale(image.load(f"images/Level{i}.png"), (214, 48)), (i*301-65, i*190+90))
@@ -51,6 +51,7 @@ def levels():
     # draw.line(screen, WHITE, (0, height/2), (width, height/2), 5)
     display.flip()
     # status = "play" # NEEDS TO BE UPDATED TO A BUTTON
+
 # instructions 
 
 def instructions():
@@ -175,12 +176,17 @@ while running:
         drawScene()
         myClock.tick(60) 
 
-    if mb[0] and status == "menu":
-        if menuRects[0].collidepoint(mx, my):
-            status = "levels"
-        if menuRects[1].collidepoint(mx, my):
-            status = "instructions"
-        if menuRects[3].collidepoint(mx, my):
-            running = False   
+    if mb[0]:
+        if status == "menu":
+            if menuRects[0].collidepoint(mx, my):
+                status = "levels"
+            elif menuRects[1].collidepoint(mx, my):
+                status = "instructions"
+            elif menuRects[3].collidepoint(mx, my):
+                running = False   
+        
+        if status == "levels":
+            if levelRects[0].collidepoint(mx, my):
+                status = "play"
             
 quit()
