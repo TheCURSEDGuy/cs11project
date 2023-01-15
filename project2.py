@@ -1,5 +1,6 @@
 from pygame import *
 
+init()
 font.init()
 myClock = time.Clock()
 timesFont = font.SysFont("Times New Roman", 25)
@@ -54,8 +55,7 @@ stage = 1
 playerRect = Rect(55, 325, 10, 50) # Player
 
 platforms = [0, [Rect(100, 400, 200, 25), Rect(750, 325, 200, 25), Rect(700, 200, 100, 25)], [Rect(100, 200, 400, 20)]]
-platformsMain = [0, [Rect(0, 500, 640, 100), Rect(0, width-playerRect.width, 0, 1)], [Rect(0, 600, 1280, 100)]] # Platforms that don't allow you to "jump down".
-walls = [0, [Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 300), Rect(1230, 150, 50, 315)], []]
+walls = [0, [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(1230, 150, 50, 315), Rect(0, width-playerRect.width, 0, 1)], [Rect(0, 600, 1280, 100)]]
 
 X = 0
 Y = 1
@@ -77,21 +77,18 @@ def stages(playerRect):
     if playerRect[0] == width:
         playerRect[X] = 0
         stage += 1
-        playerRect[Y] = platformsMain[stage][0].y - playerRect.height
+        playerRect[Y] = walls[stage][0].y - playerRect.height
     
     if playerRect[0] < 0 and stage != 1:
         playerRect[X] = width - playerRect[W]
         stage -= 1
-        playerRect[Y] = platformsMain[stage][-1].y - playerRect.height
-        print(playerRect)
-        print(platformsMain[stage][0].y)
+        playerRect[Y] = walls[stage][-1].y - playerRect.height
 
 def drawScene():
     screen.fill(MIDTUYU)
     drawPlayer()
 
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
-    [draw.rect(screen, DARKTUYU, i) for i in platformsMain[stage]]
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     display.flip()
 
@@ -101,7 +98,10 @@ def drawPlayer():
 def movePlayer(playerRect):
     v[X] = 0
 
-    if keys[K_w] and playerRect[Y] + playerRect[H] == v[BOTTOM] and v[Y] == 0:
+    if (keys[K_w] and
+        playerRect[Y] + playerRect[H] == v[BOTTOM] and
+        v[Y] == 0 and 
+        wallCollision(playerRect[X], playerRect[Y] - playerRect.height, walls) == -1):
         v[Y] = jump
     
     if keys[K_d] and wallCollision(playerRect[X] + playerRect.width/2, playerRect[Y], walls) == -1:
@@ -123,16 +123,7 @@ def collision(playerRect, platforms):
             keys[K_s]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y] = v[2]-playerRect[H]
-
-    for i in platformsMain[stage]: # Platforms that cannot be jumped down from.
-        if (playerRect[X] + playerRect[W] > i[X] and
-            playerRect[X] < i[X] + i[W] and
-            playerRect[Y] + playerRect[H] <= i[Y] and
-            playerRect[Y] + playerRect[H] + v[Y] >= i[Y]):
-            v[BOTTOM] = i[Y]
-            v[Y] = 0
-            playerRect[Y] = v[2]-playerRect[H]
+            playerRect[Y] = v[BOTTOM]-playerRect[H]
     
     for i in walls[stage]:
         if (playerRect[X] + playerRect[W] > i[X] and 
@@ -141,7 +132,7 @@ def collision(playerRect, platforms):
             playerRect[Y] + playerRect[H] + v[Y] >= i[Y]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y] = v[2]-playerRect[H]
+            playerRect[Y] = v[BOTTOM]-playerRect[H]  
 
     playerRect [Y] += v[Y]
     
@@ -152,7 +143,7 @@ def collision(playerRect, platforms):
 
 def wallCollision(playerX, playerY, walls):
     playerRect = Rect(playerX, playerY, 10, 50)
-    return playerRect.collidelist(walls[stage]) 
+    return playerRect.collidelist(walls[stage])
 
 while running:
     for evt in event.get():
@@ -182,6 +173,6 @@ while running:
         if menuRects[1].collidepoint(mx, my):
             status = "instructions"
         if menuRects[3].collidepoint(mx, my):
-            running = False
+            running = False   
             
 quit()
