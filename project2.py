@@ -1,12 +1,15 @@
 from pygame import *
 
 init()
-font.init()
 myClock = time.Clock()
-timesFont = font.SysFont("Times New Roman", 25)
+consolasFont = font.SysFont("consolas", 40)
 
 width, height = 1280, 720
 screen = display.set_mode((width, height))
+display.set_caption("TUYU's Bizarre Adventure")
+
+icon = image.load("images/tuyulogo.jpg")
+display.set_icon(icon)
 
 RED = (255, 0, 0)
 GREY = (127, 127, 127)
@@ -19,38 +22,61 @@ WHITE = (255, 255, 255)
 DARKTUYU = (23, 23, 41)
 MIDTUYU = (80, 81, 124)
 LIGHTTUYU = (206, 74, 125)
+BLOODTUYU = (170, 48, 37)
+SLAVETUYU =(32, 59, 50)
 
 running = True
 status = "menu"
 
+# images
+tuyumenu = transform.smoothscale(image.load("images/WHATR.jpg"), (800, 720))
+tuyuknife = image.load("images/tuyuknife.jpg")
+tuyudemon = image.load("images/tuyudemon.jpg")
+tuyuslave = image.load("images/tuyuslave.jpg")
+
+backText = image.load("images/Back.png")
+
 # menu
 menuRects = [Rect(865, 130*i+200, 350, 80) for i in range(4)] # Buttons in the menu.
 menuText = ["PLAY", "INSTRUCTIONS", "SOMETHING", "QUIT"]
-textPos = [(i[0]+20, i[1]+20) for i in menuRects]
+textPos = [(i[0]+20, i[1]+23) for i in menuRects]
 
 levelRects = [Rect(300*i+240, 190*i+70, 200, 200) for i in range(3)]
 stage = 0
 
 def menu():
     screen.fill(MIDTUYU)
-    screen.blit(transform.smoothscale(image.load("images/WHATR.jpg"), (800, 720)), (0, 0))
+    screen.blit(tuyumenu, (0, 0))
     [draw.rect(screen, WHITE, i) for i in menuRects]
     [draw.rect(screen, BLACK, i, 5) for i in menuRects]
-    [screen.blit(timesFont.render(i, True, BLACK),(j)) for i,j in zip(menuText, textPos)]
+    [screen.blit(consolasFont.render(i, True, BLACK),(j)) for i, j in zip(menuText, textPos)]
 
     display.flip()
 
 def levels():
     # global status # TEMPORARY
     screen.fill((MIDTUYU))
+    draw.rect(screen, BLOODTUYU, (427, 0, 427, height))
+    draw.rect(screen, SLAVETUYU, (854, 0, 427, height))
     [draw.rect(screen, DARKTUYU, i) for i in levelRects]
-    screen.blit(transform.smoothscale(image.load("images/tuyuknife.jpg"), (200, 200)), (220, 50))
+    screen.blit(tuyuknife, (220, 50))
+    screen.blit(tuyudemon, (520, 240))
+    screen.blit(tuyuslave, (820, 430))
     for i in range(1, 4):
-        screen.blit(transform.smoothscale(image.load(f"images/Level{i}.png"), (214, 48)), (i*301-65, i*190+90))
+        screen.blit(transform.scale(image.load(f"images/Level{i}.png"), (214, 48)), (i*301-75, i*190+90))
     # draw.line(screen, WHITE, (width/2, 0), (width/2, height), 5)
     # draw.line(screen, WHITE, (0, height/2), (width, height/2), 5)
+    back()
     display.flip()
     # status = "play" # NEEDS TO BE UPDATED TO A BUTTON
+
+def back():
+    backRect = Rect(10, height-60, 100, 50)
+    if status == "levels":
+        draw.rect(screen, DARKTUYU, backRect)
+        screen.blit(backText, (30, height-45))
+    #if mb[0] and backRect.colliderect(mx, my):
+    #    print("ee er")
 
 # instructions 
 
@@ -64,7 +90,11 @@ stage = 1
 playerRect = Rect(55, 325, 10, 50) # Player
 
 platforms = [0, [Rect(100, 400, 200, 25), Rect(750, 325, 200, 25), Rect(700, 200, 100, 25)], [Rect(100, 200, 400, 20)]]
-walls = [0, [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(1230, 150, 50, 315), Rect(0, width-playerRect.width, 0, 1)], [Rect(0, 600, 1280, 100)]]
+walls = [
+    0,
+    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(1230, 150, 50, 315), Rect(150, 250, 50, 100), Rect(0, width-playerRect.width, 0, 1)],
+    [Rect(0, 600, 1280, 100)]
+    ]
 
 X = 0
 Y = 1
