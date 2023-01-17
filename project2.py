@@ -26,6 +26,7 @@ SLAVETUYU = (32, 59, 50)
 
 running = True
 status = "menu"
+t = 0
 
 # images
 tuyumenu = transform.smoothscale(image.load("images/tuyustart.jpg"), (800, 720))
@@ -92,11 +93,10 @@ def instructions():
 # gameplay
 stage = 1
 
+knife = []
+
  # left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
-
-def knife(pos):
-    draw.rect(screen,WHITE,pos)
 
 platforms = [
     Rect(0,0,0,0),
@@ -150,6 +150,11 @@ def drawScene():
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
 
+    for i in knife:
+        # if not (i.collidelist(platforms) and i.collidelist(walls)):
+        i[X] += 5
+        knive(i)
+
     display.flip()
 
 def drawCollectibles(collectibles):
@@ -163,7 +168,11 @@ def drawCollectibles(collectibles):
 def drawPlayer():
     draw.rect(screen, (231, 220, 216), playerRect)  
 
+def knive(pos):
+    draw.rect(screen,WHITE,pos)
+
 def movePlayer(playerRect):
+    global t
     v[X] = 0
 
     if (keys[K_w] and
@@ -178,8 +187,16 @@ def movePlayer(playerRect):
     if keys[K_a] and wallCollision(playerRect[X] - playerRect.width/2, playerRect[Y], walls) == -1:
         v[X] = -walkSpeed
 
-    # if keys[K_RIGHT]:
-    #     knife.append(Rect())
+    if keys[K_RIGHT]:
+        if t > 5:
+            knife.append(Rect(playerRect[X]+playerRect[W],playerRect[Y]+playerRect[H]/2,15,5))
+            t = 0
+
+    
+    
+        
+    
+    
     
     v[Y] += gravity 
     playerRect[X] += v[X]
@@ -226,6 +243,7 @@ while running:
         if evt.type == QUIT:
             running = False
     
+    t += 1/60
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
