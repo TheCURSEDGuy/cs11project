@@ -95,8 +95,11 @@ stage = 1
  # left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
 
+def knife(pos):
+    draw.rect(screen,WHITE,pos)
+
 platforms = [
-    0,
+    Rect(0,0,0,0),
     [Rect(200, 400, 25, 25), Rect(750, 325, 200, 25), Rect(700, 200, 100, 25), Rect(200, 300, 25, 25), Rect(50, 200, 25, 25)],
     [Rect(100, 200, 400, 20)]
     ]
@@ -174,6 +177,9 @@ def movePlayer(playerRect):
 
     if keys[K_a] and wallCollision(playerRect[X] - playerRect.width/2, playerRect[Y], walls) == -1:
         v[X] = -walkSpeed
+
+    # if keys[K_RIGHT]:
+    #     knife.append(Rect())
     
     v[Y] += gravity 
     playerRect[X] += v[X]
@@ -188,6 +194,8 @@ def collision(playerRect, platforms):
             v[BOTTOM] = i[Y]
             v[Y] = 0
             playerRect[Y] = v[BOTTOM]-playerRect[H]
+        
+        
     
     for i in walls[stage]:
         if (playerRect[X] + playerRect[W] > i[X] and 
@@ -196,7 +204,11 @@ def collision(playerRect, platforms):
             playerRect[Y] + playerRect[H] + v[Y] >= i[Y]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y] = v[BOTTOM]-playerRect[H]  
+            playerRect[Y] = v[BOTTOM]-playerRect[H]
+
+        if playerRect.colliderect(i):
+            v[Y] = 6
+
 
     playerRect [Y] += v[Y]
     
