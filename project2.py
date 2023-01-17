@@ -23,6 +23,7 @@ MIDTUYU = (80, 81, 124)
 LIGHTTUYU = (206, 74, 125)
 BLOODTUYU = (170, 48, 37)
 SLAVETUYU = (32, 59, 50)
+LEANCOL = (175, 73, 231)
 
 running = True
 status = "menu"
@@ -55,7 +56,6 @@ def menu():
     display.flip()
 
 def levels():
-    # global status # TEMPORARY
     screen.fill((MIDTUYU))
     draw.rect(screen, BLOODTUYU, (427, 0, 427, height))
     draw.rect(screen, SLAVETUYU, (854, 0, 427, height))
@@ -69,7 +69,6 @@ def levels():
     # draw.line(screen, WHITE, (0, height/2), (width, height/2), 5)
     back(backRect)
     display.flip()
-    # status = "play" # NEEDS TO BE UPDATED TO A BUTTON
 
 
 def back(backRect):
@@ -81,15 +80,13 @@ def back(backRect):
         if backRect.collidepoint(mx, my):
             status = "menu"
 
-# instructions 
-
 def instructions():
     screen.fill(MIDTUYU)
     screen.blit(instructionsText, (50, 50))
     back(backRect)
     display.flip()
 
-# gameplay
+'''Gameplay'''
 stage = 1
 
  # left top width height
@@ -97,18 +94,26 @@ playerRect = Rect(55, 325, 10, 50) # Player
 
 platforms = [
     0,
-    [Rect(200, 400, 25, 25), Rect(750, 325, 200, 25), Rect(700, 200, 100, 25), Rect(200, 300, 25, 25), Rect(50, 200, 25, 25)],
+    [Rect(200, 400, 25, 25), Rect(750, 325, 175, 25), Rect(900, 200, 100, 25), Rect(200, 300, 25, 25), Rect(20, 200, 75 , 25), Rect(1050, 150, 100, 25)],
     [Rect(100, 200, 400, 20)]
     ]
 walls = [
     0,
-    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(1230, 150, 50, 315), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(0, width-playerRect.width, 0, 1)],
+    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(1230, 150, 50, 315)],
     [Rect(0, 600, 1280, 100)]
     ]
-
+lean_rects = [
+    Rect(0, 0, 0, 0), 
+    [Rect(0, height-10, width, 10)],
+    ]
 collectibles = [
     Rect(170, 50, 10, 10)
     ]
+final_door = [
+    0,
+    0,
+    0,
+]
 
 collectible_count = 0
 
@@ -116,13 +121,10 @@ X = 0
 Y = 1
 W = 2
 H = 3
-
 GROUND = height
-
 gravity = 2
 walkSpeed = 5
 jump = -25
-
 BOTTOM = 2
 v = [0, 0, GROUND]
 
@@ -143,6 +145,7 @@ def drawScene():
     screen.fill(MIDTUYU)
     drawPlayer()
     drawCollectibles(collectibles)
+    # lean(lean_rects)
 
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
@@ -156,6 +159,13 @@ def drawCollectibles(collectibles):
         if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
             collectibles.pop(i)
             collectible_count += 1
+        
+# def lean(lean_rects):
+#     [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage] if stage == 1]
+#     for i in range (len(lean_rects)):
+#         if playerRect.collidepoint(lean_rects[stage][i].x, lean_rects[stage][i].y):
+#             playerRect.x = 55
+#             playerRect.y = 325
 
 def drawPlayer():
     draw.rect(screen, (231, 220, 216), playerRect)  
@@ -196,7 +206,7 @@ def collision(playerRect, platforms):
             playerRect[Y] + playerRect[H] + v[Y] >= i[Y]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y] = v[BOTTOM]-playerRect[H]  
+            playerRect[Y] = v[BOTTOM]-playerRect[H] 
 
     playerRect [Y] += v[Y]
     
