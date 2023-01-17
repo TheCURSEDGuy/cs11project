@@ -7,7 +7,6 @@ consolasFont = font.SysFont("consolas", 40)
 width, height = 1280, 720
 screen = display.set_mode((width, height))
 display.set_caption("TUYU's Bizarre Adventure")
-
 icon = image.load("images/tuyulogo.jpg")
 display.set_icon(icon)
 
@@ -23,22 +22,24 @@ DARKTUYU = (23, 23, 41)
 MIDTUYU = (80, 81, 124)
 LIGHTTUYU = (206, 74, 125)
 BLOODTUYU = (170, 48, 37)
-SLAVETUYU =(32, 59, 50)
+SLAVETUYU = (32, 59, 50)
 
 running = True
 status = "menu"
 
 # images
-tuyumenu = transform.smoothscale(image.load("images/WHATR.jpg"), (800, 720))
+tuyumenu = transform.smoothscale(image.load("images/tuyustart.jpg"), (800, 720))
 tuyuknife = image.load("images/tuyuknife.jpg")
 tuyudemon = image.load("images/tuyudemon.jpg")
 tuyuslave = image.load("images/tuyuslave.jpg")
 
 backText = image.load("images/Back.png")
+instructionsText = image.load("images/Instructions.png")
 
 # menu
 menuRects = [Rect(865, 130*i+200, 350, 80) for i in range(4)] # Buttons in the menu.
 menuText = ["PLAY", "INSTRUCTIONS", "SOMETHING", "QUIT"]
+backRect = Rect(10, height-60, 100, 50)
 textPos = [(i[0]+20, i[1]+23) for i in menuRects]
 
 levelRects = [Rect(300*i+240, 190*i+70, 200, 200) for i in range(3)]
@@ -47,9 +48,9 @@ stage = 0
 def menu():
     screen.fill(MIDTUYU)
     screen.blit(tuyumenu, (0, 0))
-    [draw.rect(screen, WHITE, i) for i in menuRects]
-    [draw.rect(screen, BLACK, i, 5) for i in menuRects]
-    [screen.blit(consolasFont.render(i, True, BLACK),(j)) for i, j in zip(menuText, textPos)]
+    [draw.rect(screen, DARKTUYU, i) for i in menuRects]
+    [draw.rect(screen, DARKTUYU, i, 5) for i in menuRects]
+    [screen.blit(consolasFont.render(i, True, WHITE),(j)) for i, j in zip(menuText, textPos)]
 
     display.flip()
 
@@ -66,22 +67,27 @@ def levels():
         screen.blit(transform.scale(image.load(f"images/Level{i}.png"), (214, 48)), (i*301-75, i*190+90))
     # draw.line(screen, WHITE, (width/2, 0), (width/2, height), 5)
     # draw.line(screen, WHITE, (0, height/2), (width, height/2), 5)
-    back()
+    back(backRect)
     display.flip()
     # status = "play" # NEEDS TO BE UPDATED TO A BUTTON
 
-def back():
-    backRect = Rect(10, height-60, 100, 50)
-    if status == "levels":
+
+def back(backRect):
+    global status
+    if status in ["levels", "instructions"]:
         draw.rect(screen, DARKTUYU, backRect)
-        screen.blit(backText, (30, height-45))
-    #if mb[0] and backRect.colliderect(mx, my):
-    #    print("ee er")
+        screen.blit(backText, (29, height-45))
+    if mb[0]:
+        if backRect.collidepoint(mx, my):
+            status = "menu"
 
 # instructions 
 
 def instructions():
-    print("placeholder")
+    screen.fill(MIDTUYU)
+    screen.blit(instructionsText, (50, 50))
+    back(backRect)
+    display.flip()
 
 # gameplay
 stage = 1
@@ -89,12 +95,22 @@ stage = 1
  # left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
 
-platforms = [0, [Rect(100, 400, 200, 25), Rect(750, 325, 200, 25), Rect(700, 200, 100, 25)], [Rect(100, 200, 400, 20)]]
+platforms = [
+    0,
+    [Rect(200, 400, 25, 25), Rect(750, 325, 200, 25), Rect(700, 200, 100, 25), Rect(200, 300, 25, 25), Rect(50, 200, 25, 25)],
+    [Rect(100, 200, 400, 20)]
+    ]
 walls = [
     0,
-    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(1230, 150, 50, 315), Rect(150, 250, 50, 100), Rect(0, width-playerRect.width, 0, 1)],
+    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(1230, 150, 50, 315), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(0, width-playerRect.width, 0, 1)],
     [Rect(0, 600, 1280, 100)]
     ]
+
+collectibles = [
+    Rect(170, 50, 10, 10)
+    ]
+
+collectible_count = 0
 
 X = 0
 Y = 1
@@ -126,10 +142,20 @@ def stages(playerRect):
 def drawScene():
     screen.fill(MIDTUYU)
     drawPlayer()
+    drawCollectibles(collectibles)
 
-    [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
+    [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
+
     display.flip()
+
+def drawCollectibles(collectibles):
+    global collectible_count
+    [draw.rect(screen, YELLOW, j) for j in collectibles]
+    for i in range(len(collectibles)):
+        if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
+            collectibles.pop(i)
+            collectible_count += 1
 
 def drawPlayer():
     draw.rect(screen, (231, 220, 216), playerRect)  
@@ -150,7 +176,6 @@ def movePlayer(playerRect):
         v[X] = -walkSpeed
     
     v[Y] += gravity 
-
     playerRect[X] += v[X]
     
 def collision(playerRect, platforms):
