@@ -65,8 +65,6 @@ def levels():
     screen.blit(tuyuslave, (820, 430))
     for i in range(1, 4):
         screen.blit(transform.scale(image.load(f"images/Level{i}.png"), (214, 48)), (i*301-75, i*190+90))
-    # draw.line(screen, WHITE, (width/2, 0), (width/2, height), 5)
-    # draw.line(screen, WHITE, (0, height/2), (width, height/2), 5)
     back(backRect)
     display.flip()
 
@@ -112,13 +110,12 @@ lean_rects = [
 collectibles = [
     Rect(170, 50, 10, 10)
     ]
+collectible_count = 0
 final_door = [
     0,
     0,
     0,
 ]
-
-collectible_count = 0
 
 X = 0
 Y = 1
@@ -203,9 +200,7 @@ def collision(playerRect, platforms):
             keys[K_s]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y] = v[BOTTOM]-playerRect[H]
-        
-        
+            playerRect[Y] = v[BOTTOM]-playerRect[H] 
     
     for i in walls[stage]:
         if (playerRect[X] + playerRect[W] > i[X] and 
@@ -218,7 +213,6 @@ def collision(playerRect, platforms):
 
         if playerRect.colliderect(i):
             v[Y] = 6
-
 
     playerRect [Y] += v[Y]
     
