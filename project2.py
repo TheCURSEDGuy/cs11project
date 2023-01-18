@@ -27,12 +27,17 @@ LEANCOL = (175, 73, 231)
 
 running = True
 status = "menu"
+t = 0
 
 # images
 tuyumenu = transform.smoothscale(image.load("images/tuyustart.jpg"), (800, 720))
 tuyuknife = image.load("images/tuyuknife.jpg")
 tuyudemon = image.load("images/tuyudemon.jpg")
 tuyuslave = image.load("images/tuyuslave.jpg")
+knifePic = transform.smoothscale(image.load("images/knife.png"), (40,10))
+buschanW = transform.smoothscale(image.load("images/buschan1.png"),(30,50))
+buschanI = image.load("images/buschan0.png")
+ladder = transform.smoothscale(image.load("images/ladder.png"), (20,40))
 
 backText = image.load("images/Back.png")
 instructionsText = image.load("images/Instructions.png")
@@ -84,30 +89,39 @@ def instructions():
     back(backRect)
     display.flip()
 
+def removeBracket(original_list):
+    return [item for sublist in original_list for item in sublist]
+
+    return list
+
 '''Gameplay'''
 stage = 1
+
+knife = []
 
  # left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
 
-def knife(pos):
-    draw.rect(screen,WHITE,pos)
-
 platforms = [
-    Rect(0,0,0,0),
+    [Rect(0,0,0,0)],
     [Rect(200, 400, 25, 25), Rect(750, 325, 175, 25), Rect(900, 200, 100, 25), Rect(200, 300, 25, 25), Rect(20, 200, 75 , 25), Rect(1050, 150, 100, 25)],
-    [Rect(100, 200, 400, 20)]
+    []
+    ]
+ladders = [
+    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13)
     ]
 walls = [
-    0,
+    [Rect(0,0,0,0)],
     [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(1230, 150, 50, 315)],
-    [Rect(0, 600, 1280, 100)]
+    [Rect(0, 600, 1280, 100),Rect(400,200,1280-400,1000)]
     ]
 lean_rects = [
     Rect(0, 0, 0, 0), 
-    [Rect(0, height-10, width, 10)],
+    Rect(0, height-10, width, 10),
+    Rect(0,100,100,100)
     ]
 collectibles = [
+    Rect(0,0,0,0),
     Rect(170, 50, 10, 10)
     ]
 collectible_count = 0
@@ -146,15 +160,28 @@ def drawScene():
     drawPlayer()
     drawCollectibles(collectibles)
     # lean(lean_rects)
-
+    
+    [screen.blit(ladder,(380,100+i*40)) for i in range(int(ladders[stage][H]/40))]
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
+    
+
+
+    for i in knife:
+        
+        if not (i[0].collidelistall(platforms[stage]) or i[0].collidelistall(walls[stage])):
+            if i[1]:
+                i[0][X] += 5
+            else:
+                i[0][X] -= 5
+        
+            knive(i)
 
     display.flip()
 
 def drawCollectibles(collectibles):
     global collectible_count
-    [draw.rect(screen, YELLOW, j) for j in collectibles]
+    [draw.rect(screen, YELLOW, i) for i in collectibles]
     for i in range(len(collectibles)):
         if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
             collectibles.pop(i)
@@ -168,9 +195,16 @@ def drawCollectibles(collectibles):
 #             playerRect.y = 325
 
 def drawPlayer():
-    draw.rect(screen, (231, 220, 216), playerRect)  
+    draw.rect(screen,BLUE,playerRect)
+
+def knive(pos):
+    if pos[1]:
+        screen.blit(transform.flip(knifePic,True,False), (pos[0][X],pos[0][Y]))
+    else:
+        screen.blit(knifePic,(pos[0][X],pos[0][Y]))
 
 def movePlayer(playerRect):
+    global t
     v[X] = 0
 
     if (keys[K_w] and
@@ -179,15 +213,28 @@ def movePlayer(playerRect):
         wallCollision(playerRect[X], playerRect[Y] - playerRect.height, walls) == -1):
         v[Y] = jump
     
+    if keys[K_w] and playerRect.colliderect(ladders[stage]):
+        v[Y] = -5
+    elif playerRect.colliderect(ladders[stage]):
+        v[Y] = 2
+    
     if keys[K_d] and wallCollision(playerRect[X] + playerRect.width/2, playerRect[Y], walls) == -1:
         v[X] = walkSpeed
 
     if keys[K_a] and wallCollision(playerRect[X] - playerRect.width/2, playerRect[Y], walls) == -1:
         v[X] = -walkSpeed
 
-    # if keys[K_RIGHT]:
-    #     knife.append(Rect())
-    
+    if keys[K_RIGHT]:
+        if t > 2:
+            knife.append([Rect(playerRect[X]+playerRect[W],playerRect[Y]+playerRect[H]/2,15,5),True])
+            t = 0
+
+    if keys[K_LEFT]:
+        if t > 2:
+            knife.append([Rect(playerRect[X]-40,playerRect[Y]+playerRect[H]/2,15,5),False])
+            t = 0
+
+
     v[Y] += gravity 
     playerRect[X] += v[X]
     
@@ -230,6 +277,7 @@ while running:
         if evt.type == QUIT:
             running = False
     
+    t += 1/60
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
