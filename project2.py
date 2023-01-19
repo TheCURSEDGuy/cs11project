@@ -91,11 +91,6 @@ def instructions():
     back(backRect)
     display.flip()
 
-def removeBracket(original_list):
-    return [item for sublist in original_list for item in sublist]
-
-    return list
-
 '''Gameplay'''
 stage = 1
 
@@ -125,6 +120,11 @@ lean_rects = [
 collectibles = [
     Rect(0,0,0,0),
     Rect(170, 50, 10, 10)
+    ]
+enemy = [
+    [[Rect(0,0,0,0),True,0]],
+    [[Rect(0,0,0,0),True,0]],
+    [[Rect(400,160,40,40),True,400]]
     ]
 final_door = [
     0,
@@ -161,6 +161,7 @@ def stages(playerRect):
 def drawScene():
     screen.fill(MIDTUYU)
     drawPlayer()
+    drawEnemy()
     drawCollectibles(collectibles)
     # lean(lean_rects)
     
@@ -168,8 +169,6 @@ def drawScene():
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
     
-
-
     for i in knife:
         
         if not (i[0].collidelistall(platforms[stage]) or i[0].collidelistall(walls[stage])):
@@ -189,6 +188,27 @@ def drawCollectibles(collectibles):
         if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
             collectibles.pop(i)
             collectible_count += 1
+
+def drawEnemy():
+    for i in enemy[stage]:
+
+        # if i.colliderect(playerRect):
+
+
+        if i[0][X] + i[0][W] >= width:
+            i[1] = False
+
+        elif i[0][X] <= i[2]:
+            i[1] = True
+            
+        if i[1]:
+            i[0][X] += 1
+        
+        else:
+            i[0][X] -=1
+
+
+        draw.rect(screen,RED,i[0])
         
 # def lean(lean_rects):
 #     [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage] if stage == 1]
