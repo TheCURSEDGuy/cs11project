@@ -27,6 +27,7 @@ LEANCOL = (175, 73, 231)
 
 running = True
 status = "menu"
+level = 0
 t = 0
 
 # images
@@ -103,48 +104,46 @@ knife = []
  # left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
 
-platforms = [
+platforms = [[
     [None],
     [Rect(200, 400, 25, 25), Rect(750, 325, 175, 25), Rect(900, 200, 100, 25), Rect(200, 300, 25, 25), Rect(20, 200, 75 , 25), Rect(1050, 150, 100, 25)],
     [Rect(775,70,50,50)],
-    [Rect(150,500,100,25),Rect(50,400,200,25),Rect(200,300,100,25),Rect(695,250,10,10)]
+    [Rect(150,500,100,25),Rect(50,400,200,25),Rect(200,300,100,25),Rect(695,250,10,10)]],
+
     ]
-ladders = [
-    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13),Rect(0,0,0,0)
+ladders = [[
+    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13),Rect(0,0,0,0)],
     ]
-walls = [
+walls = [[
     [None],
     [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(0, -1, width/2, 1), Rect(1230, 150, 50, 315)],
     [Rect(0, 600, 1280, 200), Rect(400,200,1280-400,1000)],
-    [Rect(0, 600, 1280, 200), Rect(400,250,200,width-250), Rect(800,250,1000,width-250)]
+    [Rect(0, 600, 1280, 200), Rect(400,250,200,width-250), Rect(800,250,1000,width-250)]]
     ]
-lean_rects = [
+lean_rects = [[
     [0], 
     [Rect(0, height-10, width, 10)],
     [Rect(0,0,0,0)],
-    [Rect(600,350,200,width-1030)]
+    [Rect(600,350,200,width-1030)]]
     ]
-collectibles = [
+collectibles = [[
     Rect(0,0,0,0),
     Rect(165, 20, 30, 30),
     Rect(785, 20, 30, 30),
-    Rect(-100,-100,100,100)
+    Rect(-100,-100,100,100)]
     ]
 collectible_count = 0
-enemy = [
+enemy = [[
     [[Rect(0,0,0,0),True,0]],
     [[Rect(-1000,-1000,-1000,-100),True,-1000,-1000]],
     [[Rect(400,160,40,40),True,400,width]],
-    [[Rect(50,400-40,40,40),True,50,250]]
+    [[Rect(50,400-40,40,40),True,50,250]]]
     ]
-doors = [
-    Rect(0,0,0,0),
+doors = [[
+    [Rect(0,0,0,0)],
     [Rect(140, 0, 20, 70)],
     [Rect(0, 0, 0, 0)],
-    [Rect(0,0,0,0)]
-    ]
-final_door = [
-    Rect(0, 0, 0, 0) # Placeholder
+    [Rect(0,0,0,0)]]
 ]
 
 puzzle_buttons = [Rect(380, 100, 200, 200), Rect(700, 100, 200, 200), Rect(380, 450, 200, 200), Rect(700, 450, 200, 200)]
@@ -168,12 +167,12 @@ def stages(playerRect):
     if playerRect[0] == width:
         playerRect[X] = 0
         stage += 1
-        playerRect[Y] = walls[stage][0].y - playerRect.height
+        playerRect[Y] = walls[level][stage][0].y - playerRect.height
     
     if playerRect[0] < 0 and stage != 1:
         playerRect[X] = width - playerRect[W]
         stage -= 1
-        playerRect[Y] = walls[stage][-1].y - playerRect.height
+        playerRect[Y] = walls[level][stage][-1].y - playerRect.height
 
 def drawScene():
     global status
@@ -182,21 +181,20 @@ def drawScene():
     drawEnemy()
     drawCollectibles(collectibles)
     lean(lean_rects)
-
-    [screen.blit(ladder,(380,100+i*40)) for i in range(int(ladders[stage][H]/40))]
-    [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
-    [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
-    [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage]]
-    [draw.rect(screen, BLACK, i) for i in doors[stage] if type(doors[stage]) == list] # NOT WORKING8
     
-    if type(doors[stage]) == list: 
-        if playerRect.collidelistall(doors[stage]):
-            status = "puzzle"
-            puzzle()
-            doors[doors.index(doors[stage])] = Rect(0, 0, 0, 0)
+    [screen.blit(ladder,(380,100+i*40)) for i in range(int(ladders[level][stage][H]/40))]
+    [draw.rect(screen, DARKTUYU, i) for i in walls[level][stage]]
+    [draw.rect(screen, LIGHTTUYU, i) for i in platforms[level][stage]]
+    [draw.rect(screen, LEANCOL, i) for i in lean_rects[level][stage]]
+    [draw.rect(screen, BLACK, i) for i in doors[level][stage]]
+
+    if playerRect.collidelistall(doors[level][stage]):
+        status = "puzzle"
+        puzzle()
+        doors[level][stage] = [Rect(-100,-100,1,1)]
     
     for i in knife:
-        if not (i[0].collidelistall(platforms[stage]) or i[0].collidelistall(walls[stage])):
+        if not (i[0].collidelistall(platforms[level][stage]) or i[0].collidelistall(walls[level][stage])):
             if i[1]:
                 i[0][X] += 10
             else:
@@ -204,21 +202,23 @@ def drawScene():
         
             knives(i)
     screen.blit(consolasFont.render(f"Collectibles: {collectible_count}/2", True, WHITE),(0,0))
-    if stage == 3:
-        [draw.rect(screen, BLACK, i) for i in final_door]
-
     display.flip()
 
 def drawCollectibles(collectibles):
     global collectible_count
-    if collectibles[stage] != 0: 
-        screen.blit(collectible, collectibles[stage])
-        if playerRect.colliderect(collectibles[stage]):
-            collectibles[collectibles.index(collectibles[stage])] = 0
+    if collectibles[level][stage] != 0: 
+        screen.blit(collectible, collectibles[level][stage])
+        if playerRect.colliderect(collectibles[level][stage]):
+            collectibles[level][collectibles[level].index(collectibles[level][stage])] = 0
             collectible_count += 1
+    # [draw.rect(screen, YELLOW, i) for i in collectibles]
+    # for i in range(len(collectibles)):
+    #     if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
+    #         collectibles.pop(i)
+    #         collectible_count += 1
 
 def drawEnemy():
-    for i in enemy[stage]:
+    for i in enemy[level][stage]:
 
         if i[0].colliderect(playerRect):
             playerRect.x = 55
@@ -226,7 +226,7 @@ def drawEnemy():
 
         for j in knife:
             if i[0].colliderect(j[0]):
-                enemy[stage].pop(enemy[stage].index(i))
+                enemy[level][stage].pop(enemy[level][stage].index(i))
 
 
         if i[0][X] + i[0][W] >= i[-1]:
@@ -243,10 +243,14 @@ def drawEnemy():
 
 
         screen.blit(slime,i[0])
+
+def portal():
+    return
+
         
 def lean(lean_rects):
-    for i in range (len(lean_rects[stage])):
-        if playerRect.collidelistall(lean_rects[stage]):
+    for i in range (len(lean_rects[level][stage])):
+        if playerRect.collidelistall(lean_rects[level][stage]):
             playerRect.x = 55
             playerRect.y = 325
 
@@ -269,9 +273,9 @@ def movePlayer(playerRect):
         wallCollision(playerRect[X], playerRect[Y] - playerRect.height, walls) == -1):
         v[Y] = jump
     
-    if keys[K_w] and playerRect.colliderect(ladders[stage]):
+    if keys[K_w] and playerRect.colliderect(ladders[level][stage]):
         v[Y] = -5
-    elif playerRect.colliderect(ladders[stage]):
+    elif playerRect.colliderect(ladders[level][stage]):
         v[Y] = 2
     
     if keys[K_d] and wallCollision(playerRect[X] + playerRect.width/2, playerRect[Y], walls) == -1:
@@ -294,7 +298,7 @@ def movePlayer(playerRect):
     playerRect[X] += v[X]
     
 def collision(playerRect, platforms):
-    for i in platforms[stage]: # Platforms that can be jumped down from.
+    for i in platforms[level][stage]: # Platforms that can be jumped down from.
         if (playerRect[X] + playerRect[W] > i[X] and 
             playerRect[X] < i[X] + i[W] and
             playerRect[Y] + playerRect[H] <= i[Y] and
@@ -304,7 +308,7 @@ def collision(playerRect, platforms):
             v[Y] = 0
             playerRect[Y] = v[BOTTOM]-playerRect[H]
         
-    for i in walls[stage]:
+    for i in walls[level][stage]:
         if (playerRect[X] + playerRect[W] > i[X] and 
             playerRect[X] < i[X] + i[W] and
             playerRect[Y] + playerRect[H] <= i[Y] and
@@ -325,7 +329,7 @@ def collision(playerRect, platforms):
 
 def wallCollision(playerX, playerY, walls):
     playerRect = Rect(playerX, playerY, 10, 50)
-    return playerRect.collidelist(walls[stage])
+    return playerRect.collidelist(walls[level][stage])
 
 def puzzle():
     global status
@@ -351,10 +355,12 @@ while running:
             running = False
         if status == "puzzle":
             for i in range(len(puzzle_buttons)):
-                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my) and button_clicked[i] == False:
+                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my) and not button_clicked[i]:
                     button_clicked[i] = True
                     user_pattern.append(i+1)
     
+    
+
     t += 5/60
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
