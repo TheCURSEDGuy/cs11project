@@ -38,6 +38,8 @@ knifePic = transform.smoothscale(image.load("images/knife.png"), (40,10))
 buschanW = transform.smoothscale(image.load("images/buschan1.png"),(30,50))
 buschanI = image.load("images/buschan0.png")
 ladder = transform.smoothscale(image.load("images/ladder.png"), (20,40))
+slime = transform.smoothscale(image.load("images/leanMonster.png"),(40,40))
+collectible = transform.smoothscale(image.load("images/coin.png"),(30,30))
 
 backText = image.load("images/Back.png")
 instructionsText = image.load("images/Instructions.png")
@@ -104,36 +106,42 @@ playerRect = Rect(55, 325, 10, 50) # Player
 platforms = [
     [None],
     [Rect(200, 400, 25, 25), Rect(750, 325, 175, 25), Rect(900, 200, 100, 25), Rect(200, 300, 25, 25), Rect(20, 200, 75 , 25), Rect(1050, 150, 100, 25)],
-    []
+    [Rect(775,70,50,50)],
+    [Rect(150,500,100,25),Rect(50,400,200,25),Rect(200,300,100,25),Rect(695,250,10,10)]
     ]
 ladders = [
-    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13)
+    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13),Rect(0,0,0,0)
     ]
 walls = [
     [None],
     [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(0, -1, width/2, 1), Rect(1230, 150, 50, 315)],
-    [Rect(0, 600, 1280, 100),Rect(400,200,1280-400,1000)]
+    [Rect(0, 600, 1280, 200), Rect(400,200,1280-400,1000)],
+    [Rect(0, 600, 1280, 200), Rect(400,250,200,width-250), Rect(800,250,1000,width-250)]
     ]
 lean_rects = [
     [0], 
     [Rect(0, height-10, width, 10)],
-    [Rect(0,100,100,100)],
+    [Rect(0,0,0,0)],
+    [Rect(600,350,200,width-1030)]
     ]
 collectibles = [
     Rect(0,0,0,0),
-    Rect(170, 50, 10, 10),
-    Rect(300, 200, 10, 10)
+    Rect(165, 20, 30, 30),
+    Rect(785, 20, 30, 30),
+    Rect(-100,-100,100,100)
     ]
 collectible_count = 0
 enemy = [
     [[Rect(0,0,0,0),True,0]],
-    [[Rect(0,0,0,0),True,0]],
-    [[Rect(400,160,40,40),True,400]]
+    [[Rect(-1000,-1000,-1000,-100),True,-1000,-1000]],
+    [[Rect(400,160,40,40),True,400,width]],
+    [[Rect(50,400-40,40,40),True,50,250]]
     ]
 doors = [
     0,
     [Rect(140, 0, 20, 70)],
-    [Rect(0, 0, 0, 0)]
+    [Rect(0, 0, 0, 0)],
+    [Rect(0,0,0,0)]
 ]
 
 puzzle_buttons = [Rect(380, 100, 200, 200), Rect(700, 100, 200, 200), Rect(380, 450, 200, 200), Rect(700, 450, 200, 200)]
@@ -191,13 +199,13 @@ def drawScene():
                 i[0][X] -= 10
         
             knives(i)
-
+    screen.blit(consolasFont.render(f"Collectibles: {collectible_count}/2", True, WHITE),(0,0))
     display.flip()
 
 def drawCollectibles(collectibles):
     global collectible_count
     if collectibles[stage] != 0: 
-        draw.rect(screen,YELLOW,collectibles[stage]) 
+        screen.blit(collectible, collectibles[stage])
         if playerRect.colliderect(collectibles[stage]):
             collectibles[collectibles.index(collectibles[stage])] = 0
             collectible_count += 1
@@ -219,7 +227,7 @@ def drawEnemy():
                 enemy[stage].pop(enemy[stage].index(i))
 
 
-        if i[0][X] + i[0][W] >= width:
+        if i[0][X] + i[0][W] >= i[-1]:
             i[1] = False
 
         elif i[0][X] <= i[2]:
@@ -232,7 +240,7 @@ def drawEnemy():
             i[0][X] -=1
 
 
-        draw.rect(screen,RED,i[0])
+        screen.blit(slime,i[0])
         
 def lean(lean_rects):
     for i in range (len(lean_rects[stage])):
@@ -292,8 +300,8 @@ def collision(playerRect, platforms):
             keys[K_s]):
             v[BOTTOM] = i[Y]
             v[Y] = 0
-            playerRect[Y] = v[BOTTOM]-playerRect[H] 
-    
+            playerRect[Y] = v[BOTTOM]-playerRect[H]
+        
     for i in walls[stage]:
         if (playerRect[X] + playerRect[W] > i[X] and 
             playerRect[X] < i[X] + i[W] and
@@ -341,16 +349,25 @@ while running:
             running = False
         if status == "puzzle":
             for i in range(len(puzzle_buttons)):
-                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my):
-                    button_clicked[i] = True
-                    user_pattern.append(i+1)
+                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my) and not button_clicked[i]:
+                    if i+1 == puzzle_pattern[len(user_pattern)]:
+                        button_clicked[i] = True
+                        user_pattern.append(i+1)
+
+                    if i+1 != puzzle_pattern[len(user_pattern)]:
+                        button_clicked = [False for j in range(len(button_clicked))]
+                        user_pattern.clear()
     
+    
+
     t += 5/60
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
 
-    if mixer.music.get_busy() == False:
+    print(mx,my)
+
+    if not mixer.music.get_busy():
         mixer.music.play()
     
     if status == "menu":
@@ -378,7 +395,7 @@ while running:
         if status == "levels":
             if levelRects[0].collidepoint(mx, my):
                 status = "play"
-        
+            
         if status == "puzzle":
             puzzle()
             
