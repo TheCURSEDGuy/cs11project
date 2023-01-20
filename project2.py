@@ -24,6 +24,8 @@ LIGHTTUYU = (206, 74, 125)
 BLOODTUYU = (170, 48, 37)
 SLAVETUYU = (32, 59, 50)
 LEANCOL = (175, 73, 231)
+mixer.music.load("audio/otherworld.ogg")
+mixer.music.play()
 
 running = True
 status = "menu"
@@ -89,11 +91,6 @@ def instructions():
     back(backRect)
     display.flip()
 
-def removeBracket(original_list):
-    return [item for sublist in original_list for item in sublist]
-
-    return list
-
 '''Gameplay'''
 stage = 1
 
@@ -103,7 +100,7 @@ knife = []
 playerRect = Rect(55, 325, 10, 50) # Player
 
 platforms = [
-    [Rect(0,0,0,0)],
+    [None],
     [Rect(200, 400, 25, 25), Rect(750, 325, 175, 25), Rect(900, 200, 100, 25), Rect(200, 300, 25, 25), Rect(20, 200, 75 , 25), Rect(1050, 150, 100, 25)],
     []
     ]
@@ -111,25 +108,31 @@ ladders = [
     Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13)
     ]
 walls = [
-    [Rect(0,0,0,0)],
-    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(1230, 150, 50, 315)],
+    [None],
+    [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(0, -1, width/2, 1), Rect(1230, 150, 50, 315)],
     [Rect(0, 600, 1280, 100),Rect(400,200,1280-400,1000)]
     ]
 lean_rects = [
-    Rect(0, 0, 0, 0), 
-    Rect(0, height-10, width, 10),
-    Rect(0,100,100,100)
+    [0], 
+    [Rect(0, height-10, width, 10)],
+    [Rect(0,100,100,100)],
     ]
 collectibles = [
-    Rect(0,0,0,0),
-    Rect(170, 50, 10, 10)
+    [0],
+    [Rect(170, 50, 10, 10)],
+    [Rect(0, 0, 0, 0)],
     ]
 collectible_count = 0
-final_door = [
+doors = [
     0,
-    0,
-    0,
+    [Rect(140, 0, 20, 70)],
+    [Rect(0, 0, 0, 0)]
 ]
+
+puzzle_buttons = [Rect(380, 100, 200, 200), Rect(700, 100, 200, 200), Rect(380, 450, 200, 200), Rect(700, 450, 200, 200)]
+puzzle_pattern = [1, 4, 3, 2]
+user_pattern = []
+button_clicked = [False, False, False, False]
 
 X = 0
 Y = 1
@@ -144,7 +147,6 @@ v = [0, 0, GROUND]
 
 def stages(playerRect):
     global stage
-
     if playerRect[0] == width:
         playerRect[X] = 0
         stage += 1
@@ -156,52 +158,56 @@ def stages(playerRect):
         playerRect[Y] = walls[stage][-1].y - playerRect.height
 
 def drawScene():
+    global status
     screen.fill(MIDTUYU)
     drawPlayer()
     drawCollectibles(collectibles)
-    # lean(lean_rects)
+    lean(lean_rects)
     
     [screen.blit(ladder,(380,100+i*40)) for i in range(int(ladders[stage][H]/40))]
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
+    [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage]]
+    [draw.rect(screen, BLACK, i) for i in doors[stage] if doors != 0] # NOT WORKING
+
+    if playerRect.collidelistall(doors[stage]):
+        status = "puzzle"
+        puzzle()
+        doors.pop()
     
-
-
     for i in knife:
-        
         if not (i[0].collidelistall(platforms[stage]) or i[0].collidelistall(walls[stage])):
             if i[1]:
                 i[0][X] += 5
             else:
                 i[0][X] -= 5
         
-            knive(i)
+            knives(i)
 
     display.flip()
 
 def drawCollectibles(collectibles):
     global collectible_count
-    [draw.rect(screen, YELLOW, i) for i in collectibles]
-    for i in range(len(collectibles)):
-        if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
-            collectibles.pop(i)
+    [draw.rect(screen, YELLOW, i) for i in collectibles[stage] if len(collectibles) > 0]
+    for i in range(len(collectibles[stage])):
+        if playerRect.collidepoint(collectibles[stage][i].x, collectibles[stage][i].y):
+            collectibles[stage].pop(i)
             collectible_count += 1
         
-# def lean(lean_rects):
-#     [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage] if stage == 1]
-#     for i in range (len(lean_rects)):
-#         if playerRect.collidepoint(lean_rects[stage][i].x, lean_rects[stage][i].y):
-#             playerRect.x = 55
-#             playerRect.y = 325
+def lean(lean_rects):
+    for i in range (len(lean_rects[stage])):
+        if playerRect.collidelistall(lean_rects[stage]):
+            playerRect.x = 55
+            playerRect.y = 325
 
 def drawPlayer():
-    draw.rect(screen,BLUE,playerRect)
+    draw.rect(screen, BLUE, playerRect)
 
-def knive(pos):
+def knives(pos):
     if pos[1]:
-        screen.blit(transform.flip(knifePic,True,False), (pos[0][X],pos[0][Y]))
+        screen.blit(transform.flip(knifePic, True, False), (pos[0][X], pos[0][Y]))
     else:
-        screen.blit(knifePic,(pos[0][X],pos[0][Y]))
+        screen.blit(knifePic, (pos[0][X], pos[0][Y]))
 
 def movePlayer(playerRect):
     global t
@@ -226,14 +232,13 @@ def movePlayer(playerRect):
 
     if keys[K_RIGHT]:
         if t > 2:
-            knife.append([Rect(playerRect[X]+playerRect[W],playerRect[Y]+playerRect[H]/2,15,5),True])
+            knife.append([Rect(playerRect[X]+playerRect[W], playerRect[Y]+playerRect[H]/2, 15, 5), True])
             t = 0
 
     if keys[K_LEFT]:
         if t > 2:
-            knife.append([Rect(playerRect[X]-40,playerRect[Y]+playerRect[H]/2,15,5),False])
+            knife.append([Rect(playerRect[X]-40, playerRect[Y]+playerRect[H]/2, 15, 5), False])
             t = 0
-
 
     v[Y] += gravity 
     playerRect[X] += v[X]
@@ -272,16 +277,42 @@ def wallCollision(playerX, playerY, walls):
     playerRect = Rect(playerX, playerY, 10, 50)
     return playerRect.collidelist(walls[stage])
 
+def puzzle():
+    global status
+    screen.fill(DARKTUYU)
+    for i in range(len(puzzle_buttons)):
+        if button_clicked[i]:
+            draw.rect(screen, GREEN, puzzle_buttons[i])
+            
+        else:
+            draw.rect(screen, WHITE, puzzle_buttons[i])
+    draw.line(screen, WHITE, (width/2, 0), (width/2, height))
+    draw.line(screen, WHITE, (0, height/2), (width, height/2))
+
+    if puzzle_pattern == user_pattern:
+        status = "play"
+    
+    print(user_pattern)
+    display.flip()
+
 while running:
     for evt in event.get():
         if evt.type == QUIT:
             running = False
+        if status == "puzzle":
+            for i in range(len(puzzle_buttons)):
+                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my):
+                    button_clicked[i] = True
+                    user_pattern.append(i+1)
     
-    t += 1/60
+    t += 5/60
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
 
+    if mixer.music.get_busy() == False:
+        mixer.music.play()
+    
     if status == "menu":
         menu()
     elif status == "instructions":
@@ -307,5 +338,8 @@ while running:
         if status == "levels":
             if levelRects[0].collidepoint(mx, my):
                 status = "play"
+        
+        if status == "puzzle":
+            puzzle()
             
 quit()
