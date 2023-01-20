@@ -122,13 +122,12 @@ collectibles = [
     Rect(170, 50, 10, 10),
     Rect(300, 200, 10, 10)
     ]
-door = [
-    0,
-    [Rect(140, 0, 20, 70)],
-    [Rect(0, 0, 0, 0)]
-]
-
 collectible_count = 0
+enemy = [
+    [[Rect(0,0,0,0),True,0]],
+    [[Rect(0,0,0,0),True,0]],
+    [[Rect(400,160,40,40),True,400]]
+    ]
 doors = [
     0,
     [Rect(140, 0, 20, 70)],
