@@ -24,8 +24,6 @@ LIGHTTUYU = (206, 74, 125)
 BLOODTUYU = (170, 48, 37)
 SLAVETUYU = (32, 59, 50)
 LEANCOL = (175, 73, 231)
-mixer.music.load("audio/otherworld.ogg")
-mixer.music.play()
 
 running = True
 status = "menu"
@@ -43,6 +41,10 @@ ladder = transform.smoothscale(image.load("images/ladder.png"), (20,40))
 
 backText = image.load("images/Back.png")
 instructionsText = image.load("images/Instructions.png")
+
+# music
+mixer.music.load("audio/otherworld.ogg") # src: https://www.youtube.com/watch?v=Qeg3CUwXGi0
+mixer.music.play()
 
 # menu
 menuRects = [Rect(865, 130*i+200, 350, 80) for i in range(4)] # Buttons in the menu.
@@ -174,7 +176,7 @@ def drawScene():
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
     [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage]]
-    [draw.rect(screen, BLACK, i) for i in doors[stage] if doors != 0] # NOT WORKING
+    [draw.rect(screen, BLACK, i) for i in doors[stage]] # NOT WORKING
 
     if playerRect.collidelistall(doors[stage]):
         status = "puzzle"
