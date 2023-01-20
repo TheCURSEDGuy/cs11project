@@ -138,10 +138,13 @@ enemy = [
     [[Rect(50,400-40,40,40),True,50,250]]
     ]
 doors = [
-    0,
+    Rect(0,0,0,0),
     [Rect(140, 0, 20, 70)],
     [Rect(0, 0, 0, 0)],
     [Rect(0,0,0,0)]
+    ]
+final_door = [
+    Rect(0, 0, 0, 0) # Placeholder
 ]
 
 puzzle_buttons = [Rect(380, 100, 200, 200), Rect(700, 100, 200, 200), Rect(380, 450, 200, 200), Rect(700, 450, 200, 200)]
@@ -179,17 +182,18 @@ def drawScene():
     drawEnemy()
     drawCollectibles(collectibles)
     lean(lean_rects)
-    
+
     [screen.blit(ladder,(380,100+i*40)) for i in range(int(ladders[stage][H]/40))]
     [draw.rect(screen, DARKTUYU, i) for i in walls[stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[stage]]
     [draw.rect(screen, LEANCOL, i) for i in lean_rects[stage]]
-    [draw.rect(screen, BLACK, i) for i in doors[stage]] # NOT WORKING
-
-    if playerRect.collidelistall(doors[stage]):
-        status = "puzzle"
-        puzzle()
-        doors.pop()
+    [draw.rect(screen, BLACK, i) for i in doors[stage] if type(doors[stage]) == list] # NOT WORKING8
+    
+    if type(doors[stage]) == list: 
+        if playerRect.collidelistall(doors[stage]):
+            status = "puzzle"
+            puzzle()
+            doors[doors.index(doors[stage])] = Rect(0, 0, 0, 0)
     
     for i in knife:
         if not (i[0].collidelistall(platforms[stage]) or i[0].collidelistall(walls[stage])):
@@ -200,6 +204,9 @@ def drawScene():
         
             knives(i)
     screen.blit(consolasFont.render(f"Collectibles: {collectible_count}/2", True, WHITE),(0,0))
+    if stage == 3:
+        [draw.rect(screen, BLACK, i) for i in final_door]
+
     display.flip()
 
 def drawCollectibles(collectibles):
@@ -209,11 +216,6 @@ def drawCollectibles(collectibles):
         if playerRect.colliderect(collectibles[stage]):
             collectibles[collectibles.index(collectibles[stage])] = 0
             collectible_count += 1
-    # [draw.rect(screen, YELLOW, i) for i in collectibles]
-    # for i in range(len(collectibles)):
-    #     if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
-    #         collectibles.pop(i)
-    #         collectible_count += 1
 
 def drawEnemy():
     for i in enemy[stage]:
@@ -349,17 +351,10 @@ while running:
             running = False
         if status == "puzzle":
             for i in range(len(puzzle_buttons)):
-                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my) and not button_clicked[i]:
-                    if i+1 == puzzle_pattern[len(user_pattern)]:
-                        button_clicked[i] = True
-                        user_pattern.append(i+1)
-
-                    if i+1 != puzzle_pattern[len(user_pattern)]:
-                        button_clicked = [False for j in range(len(button_clicked))]
-                        user_pattern.clear()
+                if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my) and button_clicked[i] == False:
+                    button_clicked[i] = True
+                    user_pattern.append(i+1)
     
-    
-
     t += 5/60
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
