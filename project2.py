@@ -122,6 +122,12 @@ collectibles = [
     [Rect(170, 50, 10, 10)],
     [Rect(0, 0, 0, 0)],
     ]
+door = [
+    0,
+    [Rect(140, 0, 20, 70)],
+    [Rect(0, 0, 0, 0)]
+]
+
 collectible_count = 0
 doors = [
     0,
@@ -161,6 +167,7 @@ def drawScene():
     global status
     screen.fill(MIDTUYU)
     drawPlayer()
+    drawEnemy()
     drawCollectibles(collectibles)
     lean(lean_rects)
     
@@ -193,6 +200,27 @@ def drawCollectibles(collectibles):
         if playerRect.collidepoint(collectibles[stage][i].x, collectibles[stage][i].y):
             collectibles[stage].pop(i)
             collectible_count += 1
+
+def drawEnemy():
+    for i in enemy[stage]:
+
+        # if i.colliderect(playerRect):
+
+
+        if i[0][X] + i[0][W] >= width:
+            i[1] = False
+
+        elif i[0][X] <= i[2]:
+            i[1] = True
+            
+        if i[1]:
+            i[0][X] += 1
+        
+        else:
+            i[0][X] -=1
+
+
+        draw.rect(screen,RED,i[0])
         
 def lean(lean_rects):
     for i in range (len(lean_rects[stage])):
