@@ -118,9 +118,9 @@ lean_rects = [
     [Rect(0,100,100,100)],
     ]
 collectibles = [
-    [0],
-    [Rect(170, 50, 10, 10)],
-    [Rect(0, 0, 0, 0)],
+    Rect(0,0,0,0),
+    Rect(170, 50, 10, 10),
+    Rect(300, 200, 10, 10)
     ]
 door = [
     0,
@@ -185,9 +185,9 @@ def drawScene():
     for i in knife:
         if not (i[0].collidelistall(platforms[stage]) or i[0].collidelistall(walls[stage])):
             if i[1]:
-                i[0][X] += 5
+                i[0][X] += 10
             else:
-                i[0][X] -= 5
+                i[0][X] -= 10
         
             knives(i)
 
@@ -195,16 +195,27 @@ def drawScene():
 
 def drawCollectibles(collectibles):
     global collectible_count
-    [draw.rect(screen, YELLOW, i) for i in collectibles[stage] if len(collectibles) > 0]
-    for i in range(len(collectibles[stage])):
-        if playerRect.collidepoint(collectibles[stage][i].x, collectibles[stage][i].y):
-            collectibles[stage].pop(i)
+    if collectibles[stage] != 0: 
+        draw.rect(screen,YELLOW,collectibles[stage]) 
+        if playerRect.colliderect(collectibles[stage]):
+            collectibles[collectibles.index(collectibles[stage])] = 0
             collectible_count += 1
+    # [draw.rect(screen, YELLOW, i) for i in collectibles]
+    # for i in range(len(collectibles)):
+    #     if playerRect.collidepoint(collectibles[i].x, collectibles[i].y):
+    #         collectibles.pop(i)
+    #         collectible_count += 1
 
 def drawEnemy():
     for i in enemy[stage]:
 
-        # if i.colliderect(playerRect):
+        if i[0].colliderect(playerRect):
+            playerRect.x = 55
+            playerRect.y = 325
+
+        for j in knife:
+            if i[0].colliderect(j[0]):
+                enemy[stage].pop(enemy[stage].index(i))
 
 
         if i[0][X] + i[0][W] >= width:
