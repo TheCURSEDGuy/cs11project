@@ -24,6 +24,7 @@ LIGHTTUYU = (206, 74, 125)
 BLOODTUYU = (170, 48, 37)
 SLAVETUYU = (32, 59, 50)
 LEANCOL = (175, 73, 231)
+WAIFUCOL = (136, 8, 8)
 
 running = True
 status = "menu"
@@ -41,6 +42,7 @@ buschanI = image.load("images/buschan0.png")
 ladder = transform.smoothscale(image.load("images/ladder.png"), (20,40))
 slime = transform.smoothscale(image.load("images/leanMonster.png"),(40,40))
 collectible = transform.smoothscale(image.load("images/coin.png"),(30,30))
+portal = transform.smoothscale(image.load("images/portal.png"),(100,100))
 
 backText = image.load("images/Back.png")
 instructionsText = image.load("images/Instructions.png")
@@ -109,27 +111,41 @@ platforms = [[
     [Rect(200, 400, 25, 25), Rect(750, 325, 175, 25), Rect(900, 200, 100, 25), Rect(200, 300, 25, 25), Rect(20, 200, 75 , 25), Rect(1050, 150, 100, 25)],
     [Rect(775,70,50,50)],
     [Rect(150,500,100,25),Rect(50,400,200,25),Rect(200,300,100,25),Rect(695,250,10,10)]],
-
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0,0,0,0)]
+    ]
     ]
 ladders = [[
-    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,100,20,40*13),Rect(0,0,0,0)],
+    Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,200,20,40*13),Rect(0,0,0,0)],
+    [
+    Rect(0,0,0,0), Rect(0,0,0,0)]
     ]
 walls = [[
     [None],
     [Rect(0, 500, 640, 100), Rect(-1, 0, 1, height), Rect(width/2, 400, 50, 270), Rect(125, 250, 50, 100), Rect(120, 70, 100, 20), Rect(200, 0, 20, 70), Rect(0, -1, width/2, 1), Rect(1230, 150, 50, 315)],
     [Rect(0, 600, 1280, 200), Rect(400,200,1280-400,1000)],
-    [Rect(0, 600, 1280, 200), Rect(400,250,200,width-250), Rect(800,250,1000,width-250)]]
+    [Rect(0, 600, 1280, 200), Rect(400,250,200,width-250), Rect(800,250,1000,width-250)]],
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0,500,width,300)]]
     ]
 lean_rects = [[
     [0], 
     [Rect(0, height-10, width, 10)],
     [Rect(0,0,0,0)],
-    [Rect(600,350,200,width-1030)]]
+    [Rect(600,350,200,width-1030)]],
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0,0,0,0)]]
     ]
 collectibles = [[
     Rect(0,0,0,0),
     Rect(165, 20, 30, 30),
     Rect(785, 20, 30, 30),
+    Rect(-100,-100,100,100)],
+    [
+    Rect(0,0,0,0),
     Rect(-100,-100,100,100)]
     ]
 collectible_count = 0
@@ -137,14 +153,24 @@ enemy = [[
     [[Rect(0,0,0,0),True,0]],
     [[Rect(-1000,-1000,-1000,-100),True,-1000,-1000]],
     [[Rect(400,160,40,40),True,400,width]],
-    [[Rect(50,400-40,40,40),True,50,250]]]
+    [[Rect(50,400-40,40,40),True,50,250]]],
+    [
+    [Rect(0,0,0,0)],
+    [[Rect(-1000,-1000,-1000,-100),True,-1000,-1000]]]
     ]
 doors = [[
     [Rect(0,0,0,0)],
     [Rect(140, 0, 20, 70)],
     [Rect(0, 0, 0, 0)],
-    [Rect(0,0,0,0)]]
+    [Rect(0,0,0,0)]],
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0,0,0,0)]
+    ]
 ]
+portalRect = [
+    Rect(900,150,100,100)
+    ]
 
 puzzle_buttons = [Rect(380, 100, 200, 200), Rect(700, 100, 200, 200), Rect(380, 450, 200, 200), Rect(700, 450, 200, 200)]
 puzzle_pattern = [1, 4, 3, 2]
@@ -176,17 +202,23 @@ def stages(playerRect):
 
 def drawScene():
     global status
-    screen.fill(MIDTUYU)
+    if level == 0:
+        screen.fill(MIDTUYU)
+    if level == 1:
+        screen.fill(WAIFUCOL)
     drawPlayer()
     drawEnemy()
     drawCollectibles(collectibles)
     lean(lean_rects)
     
-    [screen.blit(ladder,(380,100+i*40)) for i in range(int(ladders[level][stage][H]/40))]
+    [screen.blit(ladder,(ladders[level][stage][X],ladders[level][stage][Y]+i*40)) for i in range(int(ladders[level][stage][H]/40))]
     [draw.rect(screen, DARKTUYU, i) for i in walls[level][stage]]
     [draw.rect(screen, LIGHTTUYU, i) for i in platforms[level][stage]]
     [draw.rect(screen, LEANCOL, i) for i in lean_rects[level][stage]]
     [draw.rect(screen, BLACK, i) for i in doors[level][stage]]
+
+    if stage == 3:
+        portals()
 
     if playerRect.collidelistall(doors[level][stage]):
         status = "puzzle"
@@ -194,7 +226,7 @@ def drawScene():
         doors[level][stage] = [Rect(-100,-100,1,1)]
     
     for i in knife:
-        if not (i[0].collidelistall(platforms[level][stage]) or i[0].collidelistall(walls[level][stage])):
+        if not (i[0].collidelistall(platforms[level][stage]) or i[0].collidelistall(walls[level][stage])) or i[0].collidelistall(enemy[level][stage]):
             if i[1]:
                 i[0][X] += 10
             else:
@@ -207,6 +239,7 @@ def drawScene():
 def drawCollectibles(collectibles):
     global collectible_count
     if collectibles[level][stage] != 0: 
+        print(collectibles[level][stage])
         screen.blit(collectible, collectibles[level][stage])
         if playerRect.colliderect(collectibles[level][stage]):
             collectibles[level][collectibles[level].index(collectibles[level][stage])] = 0
@@ -228,13 +261,12 @@ def drawEnemy():
             if i[0].colliderect(j[0]):
                 enemy[level][stage].pop(enemy[level][stage].index(i))
 
-
         if i[0][X] + i[0][W] >= i[-1]:
             i[1] = False
 
         elif i[0][X] <= i[2]:
             i[1] = True
-            
+        
         if i[1]:
             i[0][X] += 1
         
@@ -244,8 +276,17 @@ def drawEnemy():
 
         screen.blit(slime,i[0])
 
-def portal():
-    return
+def portals():
+    global level
+    global stage
+    global collectible_count
+    screen.blit(portal,portalRect[level])
+    if collectible_count == 2 and playerRect.colliderect(portalRect[level]):
+        level += 1
+        stage = 1
+        playerRect.x = 55
+        playerRect.y = 325
+        collectible_count = 0
 
         
 def lean(lean_rects):
@@ -365,8 +406,8 @@ while running:
     keys = key.get_pressed()
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
-
-    print(mx,my)
+    if mb[0]:
+        print(mx,my)
 
     if not mixer.music.get_busy():
         mixer.music.play()
