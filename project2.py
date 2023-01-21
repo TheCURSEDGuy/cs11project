@@ -378,6 +378,7 @@ def wallCollision(playerX, playerY, walls):
 
 def puzzle():
     global status
+    global button_clicked
     screen.fill(DARKTUYU)
     for i in range(len(puzzle_buttons)):
         if button_clicked[i]:
@@ -390,6 +391,10 @@ def puzzle():
 
     if puzzle_pattern == user_pattern:
         status = "play"
+
+    elif len(user_pattern) == 4 and puzzle_pattern != user_pattern:
+        user_pattern.clear()
+        button_clicked = [False for i in range(4)]
     
     print(user_pattern)
     display.flip()
@@ -401,6 +406,7 @@ while running:
         if status == "puzzle":
             for i in range(len(puzzle_buttons)):
                 if evt.type == MOUSEBUTTONDOWN and puzzle_buttons[i].collidepoint(mx, my) and not button_clicked[i]:
+                    print(button_clicked)
                     button_clicked[i] = True
                     user_pattern.append(i+1)
     
