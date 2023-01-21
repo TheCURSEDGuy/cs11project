@@ -1,4 +1,5 @@
 from pygame import *
+from random import *
 
 init()
 myClock = time.Clock()
@@ -25,11 +26,15 @@ BLOODTUYU = (170, 48, 37)
 SLAVETUYU = (32, 59, 50)
 LEANCOL = (175, 73, 231)
 WAIFUCOL = (136, 8, 8)
+controlCOL = (112, 41, 99)
 
 running = True
 status = "menu"
 level = 0
 t = 0
+tB = 0
+hearts = 3
+bossHearts = 20
 
 # images
 tuyumenu = transform.smoothscale(image.load("images/tuyustart.jpg"), (800, 720))
@@ -43,12 +48,14 @@ ladder = transform.smoothscale(image.load("images/ladder.png"), (20,40))
 slime = transform.smoothscale(image.load("images/leanMonster.png"),(40,40))
 collectible = transform.smoothscale(image.load("images/coin.png"),(30,30))
 portal = transform.smoothscale(image.load("images/portal.png"),(100,100))
+bossPic = transform.smoothscale(image.load("images/bossfight.png"),(width,600))
 
 backText = image.load("images/Back.png")
 instructionsText = image.load("images/Instructions.png")
 
 # music
 throw = mixer.Sound("images/knifethrow.mp3") # src: https://www.youtube.com/watch?v=6EEEibdsJMM
+clap = mixer.Sound("images/clapping.mp3")
 mixer.music.load("audio/otherworld.ogg") # src: https://www.youtube.com/watch?v=Qeg3CUwXGi0
 mixer.music.play()
 
@@ -59,6 +66,7 @@ backRect = Rect(10, height-60, 100, 50)
 textPos = [(i[0]+20, i[1]+23) for i in menuRects]
 
 levelRects = [Rect(300*i+240, 190*i+70, 200, 200) for i in range(3)]
+bossRect = Rect(500,0,width,500)
 stage = 0
 
 def menu():
@@ -103,8 +111,9 @@ def instructions():
 stage = 1
 
 knife = []
+tears = []
 
- # left top width height
+# left top width height
 playerRect = Rect(55, 325, 10, 50) # Player
 
 platforms = [[
@@ -114,13 +123,16 @@ platforms = [[
     [Rect(150,500,100,25),Rect(50,400,200,25),Rect(200,300,100,25),Rect(695,250,10,10)]],
     [
     [Rect(0,0,0,0)],
-    [Rect(300,400,300,25),Rect(700,400,300,25),Rect(500,275,300,25),Rect(635,150,30,30)]
-    ]
+    [Rect(300,400,300,25),Rect(700,400,300,25),Rect(500,275,300,25),Rect(635,150,30,30)]],
+    [
+    [Rect(0,0,0,0)], [Rect(0,0,0,0)]]
     ]
 ladders = [[
     Rect(0,0,0,0),Rect(0,0,0,0),Rect(380,200,20,40*13),Rect(0,0,0,0)],
     [
-    Rect(0,0,0,0), Rect(0,0,0,0)]
+    Rect(0,0,0,0), Rect(0,0,0,0)],
+    [
+    Rect(0,0,0,0),Rect(0,0,0,0)]
     ]
 walls = [[
     [None],
@@ -129,13 +141,19 @@ walls = [[
     [Rect(0, 600, 1280, 200), Rect(400,250,200,width-250), Rect(800,250,1000,width-250)]],
     [
     [Rect(0,0,0,0)],
-    [Rect(0,500,width,300)]]
+    [Rect(0,500,width,300)]],
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0, 600, 1280, 200)]]
     ]
 lean_rects = [[
     [0], 
     [Rect(0, height-10, width, 10)],
     [Rect(0,0,0,0)],
     [Rect(600,350,200,width-1030)]],
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0,0,0,0)]],
     [
     [Rect(0,0,0,0)],
     [Rect(0,0,0,0)]]
@@ -147,7 +165,10 @@ collectibles = [[
     Rect(-100,-100,100,100)],
     [
     Rect(0,0,0,0),
-    Rect(635,110,30,30)]
+    Rect(635,110,30,30)],
+    [
+    Rect(0,0,0,0),
+    Rect(0,0,0,0)]
     ]
 collectible_count = 0
 enemy = [[
@@ -157,7 +178,10 @@ enemy = [[
     [[Rect(50,400-40,40,40),True,50,250]]],
     [
     [[Rect(0,0,0,0)]],
-    [[Rect(560,360,40,40),False,300,600],[Rect(700,360,40,40),False,700,960]]]
+    [[Rect(560,360,40,40),False,300,600],[Rect(700,360,40,40),False,700,960]]],
+    [
+    [[Rect(0,0,0,0),True,-1000,-1000]],
+    [[Rect(0,0,0,0),True,-1000,-1000]]]
     ]
 doors = [[
     [Rect(0,0,0,0)],
@@ -167,7 +191,10 @@ doors = [[
     [
     [Rect(0,0,0,0)],
     [Rect(0,0,0,0)]
-    ]
+    ],
+    [
+    [Rect(0,0,0,0)],
+    [Rect(0,0,0,0)]]
 ]
 portalRect = [
     Rect(900,150,100,100)
@@ -203,10 +230,17 @@ def stages(playerRect):
 
 def drawScene():
     global status
+    global bossRect
     if level == 0:
         screen.fill(MIDTUYU)
     if level == 1:
         screen.fill(WAIFUCOL)
+    if level == 2:
+        screen.fill(controlCOL)
+        if bossRect[Y] != 0:
+            bossRect.y -= 3
+        else:
+            boss()
     drawPlayer()
     drawEnemy()
     drawCollectibles(collectibles)
@@ -230,8 +264,10 @@ def drawScene():
         if not (i[0].collidelistall(platforms[level][stage]) or i[0].collidelistall(walls[level][stage])):
             if i[1]:
                 i[0][X] += 10
-            else:
+            elif not i[1] and len(i) != 3:
                 i[0][X] -= 10
+            else:
+                i[0][Y] -=10
         
             knives(i)
     screen.blit(consolasFont.render(f"Collectibles: {collectible_count}/2", True, WHITE),(0,0))
@@ -303,8 +339,10 @@ def drawPlayer():
 def knives(pos):
     if pos[1]:
         screen.blit(transform.flip(knifePic, True, False), (pos[0][X], pos[0][Y]))
-    else:
+    elif not pos[1] and len(pos) != 3:
         screen.blit(knifePic, (pos[0][X], pos[0][Y]))
+    else:
+        screen.blit(transform.rotate(knifePic,270), (pos[0][X], pos[0][Y]))
 
 def movePlayer(playerRect):
     global t
@@ -336,6 +374,12 @@ def movePlayer(playerRect):
     if keys[K_LEFT]:
         if t > 2:
             knife.append([Rect(playerRect[X]-40, playerRect[Y]+playerRect[H]/2, 15, 5), False])
+            t = 0
+            throw.play()
+
+    if keys[K_UP]:
+        if t > 2:
+            knife.append([Rect(playerRect[X]-(playerRect[W]/8), playerRect[Y]-25, 15, 5), False, True])
             t = 0
             throw.play()
 
@@ -399,6 +443,54 @@ def puzzle():
     print(user_pattern)
     display.flip()
 
+def boss():
+    global tB
+    global bossRect
+    global hearts
+    global bossHearts
+    global status
+    
+    draw.rect(screen,WHITE,(140,50,1000,50))
+    [draw.rect(screen,RED,(140,50,50*i+20,50)) for i in range(bossHearts+1)]
+    tearGun1 = Rect(bossRect[X] + bossRect[W]/2,bossRect[Y]+bossRect[H]/4+25,100,20)
+    tearGun2 = Rect(bossRect[X] + bossRect[W]/2-150,bossRect[Y]+bossRect[H]/4+50,100,30)
+    if playerRect.x > bossRect[X]+bossRect[W]/2:
+        bossRect.x += 2
+    if playerRect.x < bossRect[X]+bossRect[W]/2:
+        bossRect.x -= 2
+    if len(tears) > 0:
+        for i in tears:
+            i[Y] += 1
+            if i.colliderect(playerRect):
+                hearts -= 1
+                tears.pop(tears.index(i))
+    if tB > 1:
+        tears.append(Rect(randint(tearGun1[X], tearGun1[X] + tearGun1[W]),tearGun1[Y]+tearGun1[H], 20, 10))
+        tears.append(Rect(randint(tearGun2[X], tearGun2[X] + tearGun2[W]),tearGun2[Y]+tearGun2[H], 20, 10))
+        tB = 0
+    for i in knife:
+        if i[0].colliderect(tearGun1) or i[0].colliderect(tearGun2):
+            bossHearts -= 1
+            knife.pop(knife.index(i))
+
+    screen.blit(bossPic,bossRect)
+    [draw.rect(screen,BLUE,(i)) for i in tears if len(tears) > 0]
+
+    tB += 3/60
+
+    if hearts == 0:
+        bossHearts = 20
+        hearts = 3
+        tears.clear()
+        status = "menu"
+
+    if bossHearts <= 0:
+        bossHearts = 20
+        hearts = 3
+        status = "menu"
+        clap.play()
+
+
 while running:
     for evt in event.get():
         if evt.type == QUIT:
@@ -450,6 +542,9 @@ while running:
                 status = "play"
             if levelRects[1].collidepoint(mx,my):
                 level = 1
+                status = "play"
+            if levelRects[2].collidepoint(mx,my):
+                level = 2
                 status = "play"
 
             
