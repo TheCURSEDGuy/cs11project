@@ -48,6 +48,7 @@ backText = image.load("images/Back.png")
 instructionsText = image.load("images/Instructions.png")
 
 # music
+throw = mixer.Sound("images/knifethrow.mp3") # src: https://www.youtube.com/watch?v=6EEEibdsJMM
 mixer.music.load("audio/otherworld.ogg") # src: https://www.youtube.com/watch?v=Qeg3CUwXGi0
 mixer.music.play()
 
@@ -113,7 +114,7 @@ platforms = [[
     [Rect(150,500,100,25),Rect(50,400,200,25),Rect(200,300,100,25),Rect(695,250,10,10)]],
     [
     [Rect(0,0,0,0)],
-    [Rect(0,0,0,0)]
+    [Rect(300,400,300,25),Rect(700,400,300,25),Rect(500,275,300,25),Rect(635,150,30,30)]
     ]
     ]
 ladders = [[
@@ -146,7 +147,7 @@ collectibles = [[
     Rect(-100,-100,100,100)],
     [
     Rect(0,0,0,0),
-    Rect(-100,-100,100,100)]
+    Rect(635,110,30,30)]
     ]
 collectible_count = 0
 enemy = [[
@@ -155,8 +156,8 @@ enemy = [[
     [[Rect(400,160,40,40),True,400,width]],
     [[Rect(50,400-40,40,40),True,50,250]]],
     [
-    [Rect(0,0,0,0)],
-    [[Rect(-1000,-1000,-1000,-100),True,-1000,-1000]]]
+    [[Rect(0,0,0,0)]],
+    [[Rect(560,360,40,40),False,300,600],[Rect(700,360,40,40),False,700,960]]]
     ]
 doors = [[
     [Rect(0,0,0,0)],
@@ -226,7 +227,7 @@ def drawScene():
         doors[level][stage] = [Rect(-100,-100,1,1)]
     
     for i in knife:
-        if not (i[0].collidelistall(platforms[level][stage]) or i[0].collidelistall(walls[level][stage])) or i[0].collidelistall(enemy[level][stage]):
+        if not (i[0].collidelistall(platforms[level][stage]) or i[0].collidelistall(walls[level][stage])):
             if i[1]:
                 i[0][X] += 10
             else:
@@ -260,6 +261,7 @@ def drawEnemy():
         for j in knife:
             if i[0].colliderect(j[0]):
                 enemy[level][stage].pop(enemy[level][stage].index(i))
+                knife.pop(knife.index(j))
 
         if i[0][X] + i[0][W] >= i[-1]:
             i[1] = False
@@ -329,11 +331,13 @@ def movePlayer(playerRect):
         if t > 2:
             knife.append([Rect(playerRect[X]+playerRect[W], playerRect[Y]+playerRect[H]/2, 15, 5), True])
             t = 0
+            throw.play()
 
     if keys[K_LEFT]:
         if t > 2:
             knife.append([Rect(playerRect[X]-40, playerRect[Y]+playerRect[H]/2, 15, 5), False])
             t = 0
+            throw.play()
 
     v[Y] += gravity 
     playerRect[X] += v[X]
@@ -436,7 +440,12 @@ while running:
         
         if status == "levels":
             if levelRects[0].collidepoint(mx, my):
+                level = 0
                 status = "play"
+            if levelRects[1].collidepoint(mx,my):
+                level = 1
+                status = "play"
+
             
         if status == "puzzle":
             puzzle()
